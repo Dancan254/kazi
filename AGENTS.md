@@ -4,7 +4,7 @@
 An AI job aggregator backend that will normalize and deduplicate jobs from public APIs, then expose search through REST and MCP.
 
 ## What it is NOT
-No frontend or user accounts. Other source adapters, fuzzy deduplication, semantic search, MCP, Redis, and production deployment are not implemented yet.
+No frontend or user accounts. Other source adapters, fuzzy deduplication, semantic search, Redis, and production deployment are not implemented yet. The MCP endpoint is unauthenticated and intended for local development.
 
 ## Package structure
 `com.kazi.kazi`
@@ -15,25 +15,28 @@ No frontend or user accounts. Other source adapters, fuzzy deduplication, semant
 - `ingestion/run/` — persistent source-run audits
 - `ingestion/adzuna/` — Adzuna configuration, declarative `@HttpExchange` client, source adapter, response mapping, and scheduler
 - `job/` — canonical jobs, source provenance, deterministic deduplication, merge rules, and Kafka job events
-- `search/` — paginated REST job search and filtering
+- `search/` — shared job-search use case, paginated REST endpoint, and response DTOs
+- `mcp/` — MCP tool adapters over domain use cases
 - `shared/config/` — cross-cutting configuration
 - `KaziApplication.java` — application entry point
 
-Add future domain code in feature packages such as `mcp/`.
+Add future domain code in feature packages.
 
 ## Current foundation
 - Java 25, Spring Boot 4.1.2, Maven
+- Spring AI 2.0.2 with streamable HTTP MCP at `/mcp`
 - PostgreSQL 18 with pgvector and Flyway
 - Apache Kafka with JSON job events
 - `GET /api/health`
 - `GET /api/jobs` with keyword, location, employment-type, and pagination filters
+- `search_active_jobs` MCP tool with validated filters and a 20-result limit
 - Job source contract and raw-payload preservation
 - Company, title, location, salary, and employment-type normalization
 - Adzuna pagination and date filtering with timeouts, Spring Framework `@Retryable`, and Resilience4j circuit breaking
 - Opt-in scheduling, per-source failure isolation, and persistent `SourceRun` audits
 - Canonical job persistence with deterministic deduplication, merging, and source provenance
 - Docker Compose and GitHub Actions CI
-- Integration tests use real PostgreSQL and Kafka through Testcontainers; mapping and normalization tests are plain JUnit
+- Integration tests use real PostgreSQL, Kafka, and an MCP client; mapping and normalization tests are plain JUnit
 
 ## How to run
 ```bash
