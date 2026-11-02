@@ -4,7 +4,7 @@
 An AI job aggregator backend that will normalize and deduplicate jobs from public APIs, then expose search through REST and MCP.
 
 ## What it is NOT
-No frontend or user accounts. Canonical job persistence, other source adapters, deduplication, semantic search, MCP, Redis, Kafka, and production deployment are not implemented yet.
+No frontend or user accounts. Other source adapters, fuzzy deduplication, semantic search, MCP, Redis, Kafka, and production deployment are not implemented yet.
 
 ## Package structure
 `com.kazi.kazi`
@@ -14,10 +14,11 @@ No frontend or user accounts. Canonical job persistence, other source adapters, 
 - `ingestion/normalization/` — normalized job model and normalization rules
 - `ingestion/run/` — persistent source-run audits
 - `ingestion/adzuna/` — Adzuna configuration, declarative `@HttpExchange` client, source adapter, response mapping, and scheduler
+- `job/` — canonical jobs, source provenance, deterministic deduplication, and merge rules
 - `shared/config/` — cross-cutting configuration
 - `KaziApplication.java` — application entry point
 
-Add future domain code in feature packages such as `job/` and `search/`.
+Add future domain code in feature packages such as `search/` and `mcp/`.
 
 ## Current foundation
 - Java 25, Spring Boot 4.1.2, Maven
@@ -27,6 +28,7 @@ Add future domain code in feature packages such as `job/` and `search/`.
 - Company, title, location, salary, and employment-type normalization
 - Adzuna pagination and date filtering with timeouts, Spring Framework `@Retryable`, and Resilience4j circuit breaking
 - Opt-in scheduling, per-source failure isolation, and persistent `SourceRun` audits
+- Canonical job persistence with deterministic deduplication, merging, and source provenance
 - Docker Compose and GitHub Actions CI
 - Integration tests use real PostgreSQL through Testcontainers; mapping and normalization tests are plain JUnit
 

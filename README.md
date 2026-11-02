@@ -45,7 +45,7 @@ For a disposable development database:
 Adzuna reads `ADZUNA_APP_ID` and `ADZUNA_APP_KEY`, with optional `ADZUNA_COUNTRY` and `ADZUNA_CURRENCY` overrides. Scheduling is disabled by default; set `INGESTION_SCHEDULING_ENABLED=true` to enable the six-hour poll interval. `INGESTION_INITIAL_DELAY` controls the first run.
 
 ## Project structure
-Code is packaged by feature. `health` contains the health controller. `ingestion` contains orchestration and scheduling, with focused subpackages for `source` contracts, `normalization`, and persistent `run` audits. The `adzuna` subpackage contains its declarative `@HttpExchange` client, source adapter, and scheduler. `RestClient` is used only as the underlying transport. Future job, search, and MCP code will live in separate feature packages.
+Code is packaged by feature. `health` contains the health controller. `ingestion` contains orchestration and scheduling, with focused subpackages for `source` contracts, `normalization`, and persistent `run` audits. The `adzuna` subpackage contains its declarative `@HttpExchange` client, source adapter, and scheduler. `RestClient` is used only as the underlying transport. `job` contains canonical jobs, source provenance, deterministic deduplication, and merge rules. Future search and MCP code will live in separate feature packages.
 
 ## API
 ```bash
@@ -56,8 +56,8 @@ curl http://localhost:8080/api/health
 - [ADR-0001](docs/adr/0001-package-by-feature-monolith.md) — Package-by-feature monolith over microservices
 
 ## Testing
-The health integration test starts the application on a random port, runs Flyway against real PostgreSQL, and calls the endpoint over HTTP. Normalization and Adzuna mapping use small plain-JUnit tests. Focused tests prove Spring Framework retries and Resilience4j circuit breaking. Ingestion integration tests use real PostgreSQL to verify run audits and per-source failure isolation.
+The health integration test starts the application on a random port, runs Flyway against real PostgreSQL, and calls the endpoint over HTTP. Normalization and Adzuna mapping use small plain-JUnit tests. Focused tests prove Spring Framework retries and Resilience4j circuit breaking. Ingestion and job integration tests use real PostgreSQL to verify run audits, failure isolation, deterministic deduplication, merging, and source provenance.
 
 ## Status
-- Built: application foundation, database migration, health endpoint, source contract, normalization, Adzuna adapter, opt-in scheduling, run audits, Docker Compose, and CI.
-- Not built: canonical job persistence, other source adapters, deduplication, Kafka, search, Redis, MCP, security hardening, and full observability.
+- Built: application foundation, database migration, health endpoint, source contract, normalization, Adzuna adapter, opt-in scheduling, run audits, canonical job persistence, deterministic deduplication, Docker Compose, and CI.
+- Not built: other source adapters, fuzzy deduplication, Kafka, search, Redis, MCP, security hardening, and full observability.

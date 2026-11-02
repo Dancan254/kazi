@@ -49,10 +49,10 @@ public class SourceRun {
         this.status = SourceRunStatus.RUNNING;
     }
 
-    public void complete(Instant finishedAt, int jobsFetched) {
+    public void complete(Instant finishedAt, int jobsFetched, int jobsInserted) {
         this.finishedAt = finishedAt;
         this.jobsFetched = jobsFetched;
-        this.jobsInserted = 0;
+        this.jobsInserted = jobsInserted;
         this.status = SourceRunStatus.COMPLETED;
     }
 

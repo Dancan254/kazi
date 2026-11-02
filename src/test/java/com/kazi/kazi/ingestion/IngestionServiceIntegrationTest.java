@@ -8,6 +8,8 @@ import com.kazi.kazi.ingestion.run.SourceRunRepository;
 import com.kazi.kazi.ingestion.run.SourceRunStatus;
 import com.kazi.kazi.ingestion.source.JobSource;
 import com.kazi.kazi.ingestion.source.RawJob;
+import com.kazi.kazi.job.JobRepository;
+import com.kazi.kazi.job.JobSourceLinkRepository;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -23,8 +25,16 @@ class IngestionServiceIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private SourceRunRepository sourceRunRepository;
 
+    @Autowired
+    private JobSourceLinkRepository sourceLinkRepository;
+
+    @Autowired
+    private JobRepository jobRepository;
+
     @BeforeEach
     void cleanRuns() {
+        sourceLinkRepository.deleteAll();
+        jobRepository.deleteAll();
         sourceRunRepository.deleteAll();
     }
 
@@ -34,7 +44,7 @@ class IngestionServiceIntegrationTest extends BaseIntegrationTest {
 
         assertThat(run.getStatus()).isEqualTo(SourceRunStatus.COMPLETED);
         assertThat(run.getJobsFetched()).isEqualTo(1);
-        assertThat(run.getJobsInserted()).isZero();
+        assertThat(run.getJobsInserted()).isEqualTo(1);
         assertThat(sourceRunRepository.findById(run.getId())).isPresent();
     }
 
