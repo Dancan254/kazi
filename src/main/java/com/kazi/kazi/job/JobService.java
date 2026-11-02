@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.util.HexFormat;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,8 +28,11 @@ public class JobService {
         this.clock = clock;
     }
 
+    public record SavedJob(UUID id, boolean inserted) {
+    }
+
     @Transactional
-    public boolean save(NormalizedJob normalizedJob) {
+    public SavedJob save(NormalizedJob normalizedJob) {
         String deterministicKey = deterministicKey(normalizedJob);
         String location = location(normalizedJob);
         Instant now = clock.instant();
@@ -60,7 +64,7 @@ public class JobService {
                 now
             ));
         }
-        return inserted;
+        return new SavedJob(job.getId(), inserted);
     }
 
     private String deterministicKey(NormalizedJob job) {

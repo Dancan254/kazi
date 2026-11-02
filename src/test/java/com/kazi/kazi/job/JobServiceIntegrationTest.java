@@ -33,9 +33,9 @@ class JobServiceIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void should_insert_canonical_job_and_source_provenance() {
-        boolean inserted = jobService.save(normalizedJob("adzuna", "Description", "USD 120000 - 150000"));
+        var savedJob = jobService.save(normalizedJob("adzuna", "Description", "USD 120000 - 150000"));
 
-        assertThat(inserted).isTrue();
+        assertThat(savedJob.inserted()).isTrue();
         assertThat(jobRepository.findAll()).hasSize(1);
         assertThat(sourceLinkRepository.findAll()).hasSize(1);
         Job job = jobRepository.findAll().getFirst();
@@ -50,13 +50,13 @@ class JobServiceIntegrationTest extends BaseIntegrationTest {
     void should_merge_duplicate_and_add_second_source() {
         jobService.save(normalizedJob("adzuna", "Short", "USD 120000 - 150000"));
 
-        boolean inserted = jobService.save(normalizedJob(
+        var savedJob = jobService.save(normalizedJob(
             "remoteok",
             "A much longer description of the same role",
             "USD 100000 - 160000"
         ));
 
-        assertThat(inserted).isFalse();
+        assertThat(savedJob.inserted()).isFalse();
         assertThat(jobRepository.findAll()).hasSize(1);
         assertThat(sourceLinkRepository.findAll()).hasSize(2);
         Job job = jobRepository.findAll().getFirst();
