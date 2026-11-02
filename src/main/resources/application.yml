@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: kazi
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/kazi}
+    username: ${DB_USER:kazi}
+    password: ${DB_PASSWORD:kazi}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  data:
+    web:
+      pageable:
+        default-page-size: 20
+        max-page-size: 100
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+ingestion:
+  scheduling-enabled: ${INGESTION_SCHEDULING_ENABLED:false}
+  initial-delay: ${INGESTION_INITIAL_DELAY:PT0S}
+  scheduler-pool-size: 2
+
+adzuna:
+  base-url: ${ADZUNA_BASE_URL:https://api.adzuna.com/v1/api}
+  app-id: ${ADZUNA_APP_ID:}
+  app-key: ${ADZUNA_APP_KEY:}
+  country: ${ADZUNA_COUNTRY:us}
+  currency: ${ADZUNA_CURRENCY:USD}
+  results-per-page: 50
+  retry:
+    max-retries: 2
+    delay-ms: 2000
+    jitter-ms: 500
+    multiplier: 2
+    max-delay-ms: 30000
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      adzuna:
+        sliding-window-size: 10
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s

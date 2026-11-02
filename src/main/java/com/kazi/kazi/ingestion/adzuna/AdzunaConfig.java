@@ -1,0 +1,36 @@
+package com.kazi.kazi.ingestion.adzuna;
+
+import java.time.Duration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.resilience.annotation.EnableResilientMethods;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.support.RestClientAdapter;
+import org.springframework.web.service.invoker.HttpServiceProxyFactory;
+
+@Configuration
+@EnableResilientMethods(proxyTargetClass = true)
+@EnableConfigurationProperties(AdzunaProperties.class)
+class AdzunaConfig {
+
+    @Bean
+    RestClient adzunaRestClient(RestClient.Builder builder, AdzunaProperties properties) {
+        var requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(Duration.ofSeconds(2));
+        requestFactory.setReadTimeout(Duration.ofSeconds(5));
+        return builder
+            .baseUrl(properties.baseUrl())
+            .requestFactory(requestFactory)
+            .build();
+    }
+
+    @Bean
+    AdzunaHttpClient adzunaHttpClient(RestClient adzunaRestClient) {
+        return HttpServiceProxyFactory
+            .builderFor(RestClientAdapter.create(adzunaRestClient))
+            .build()
+            .createClient(AdzunaHttpClient.class);
+    }
+}
