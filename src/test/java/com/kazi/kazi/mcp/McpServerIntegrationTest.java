@@ -13,6 +13,7 @@ import io.modelcontextprotocol.client.transport.HttpClientStreamableHttpTranspor
 import io.modelcontextprotocol.spec.McpSchema;
 import java.time.Instant;
 import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +50,7 @@ class McpServerIntegrationTest extends BaseIntegrationTest {
 
             assertThat(client.listTools().tools())
                 .extracting(McpSchema.Tool::name)
-                .contains("search_active_jobs");
+                .contains("search_active_jobs", "get_job_details");
 
             var result = client.callTool(new McpSchema.CallToolRequest(
                 "search_active_jobs",
@@ -58,6 +59,24 @@ class McpServerIntegrationTest extends BaseIntegrationTest {
 
             assertThat(result.isError()).isFalse();
             assertThat(result.content()).isNotEmpty();
+        }
+    }
+
+    @Test
+    void should_return_job_details_with_source_links() {
+        UUID jobId = saveJavaJob();
+
+        try (var client = client()) {
+            client.initialize();
+
+            var result = client.callTool(new McpSchema.CallToolRequest(
+                "get_job_details",
+                Map.of("jobId", jobId.toString())
+            ));
+
+            assertThat(result.isError()).isFalse();
+            var content = (McpSchema.TextContent) result.content().getFirst();
+            assertThat(content.text()).contains("https://example.com/jobs/mcp-job-1");
         }
     }
 
@@ -75,6 +94,20 @@ class McpServerIntegrationTest extends BaseIntegrationTest {
         }
     }
 
+    @Test
+    void should_return_error_result_when_job_does_not_exist() {
+        try (var client = client()) {
+            client.initialize();
+
+            var result = client.callTool(new McpSchema.CallToolRequest(
+                "get_job_details",
+                Map.of("jobId", UUID.randomUUID().toString())
+            ));
+
+            assertThat(result.isError()).isTrue();
+        }
+    }
+
     private io.modelcontextprotocol.client.McpSyncClient client() {
         var transport = HttpClientStreamableHttpTransport
             .builder("http://localhost:" + port + "/mcp")
@@ -82,8 +115,8 @@ class McpServerIntegrationTest extends BaseIntegrationTest {
         return McpClient.sync(transport).build();
     }
 
-    private void saveJavaJob() {
-        jobService.save(normalizer.normalize(new RawJob(
+    private UUID saveJavaJob() {
+        return jobService.save(normalizer.normalize(new RawJob(
             "test-source",
             "mcp-job-1",
             "https://example.com/jobs/mcp-job-1",
@@ -95,6 +128,6 @@ class McpServerIntegrationTest extends BaseIntegrationTest {
             "Spring Boot",
             Instant.parse("2026-11-01T00:00:00Z"),
             Map.of("id", "mcp-job-1")
-        )));
+        ))).id();
     }
 }

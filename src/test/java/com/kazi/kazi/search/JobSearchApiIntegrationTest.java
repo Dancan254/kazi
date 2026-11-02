@@ -85,6 +85,38 @@ class JobSearchApiIntegrationTest extends BaseIntegrationTest {
             .jsonPath("$.totalPages").isEqualTo(2);
     }
 
+    @Test
+    void should_return_job_details_with_source_links() {
+        saveJob("1", "Java Developer", "Acme", "Nairobi, Kenya", "Full Time", "Spring Boot");
+        var jobId = jobRepository.findAll().getFirst().getId();
+
+        client.get().uri("/api/jobs/" + jobId)
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$.id").isEqualTo(jobId.toString())
+            .jsonPath("$.title").isEqualTo("java developer")
+            .jsonPath("$.status").isEqualTo("active")
+            .jsonPath("$.sources.length()").isEqualTo(1)
+            .jsonPath("$.sources[0].sourceName").isEqualTo("test-source")
+            .jsonPath("$.sources[0].sourceUrl").isEqualTo("https://example.com/jobs/1");
+    }
+
+    @Test
+    void should_return_problem_detail_when_job_does_not_exist() {
+        var jobId = java.util.UUID.randomUUID();
+
+        client.get().uri("/api/jobs/" + jobId)
+            .exchange()
+            .expectStatus().isNotFound()
+            .expectBody()
+            .jsonPath("$.status").isEqualTo(404)
+            .jsonPath("$.title").isEqualTo("Job not found")
+            .jsonPath("$.detail").isEqualTo(
+                "Job " + jobId + " not found; search active jobs to find a current job ID"
+            );
+    }
+
     private void saveJob(
         String sourceJobId,
         String title,

@@ -49,4 +49,23 @@ class JobMcpToolsTest {
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("limit must be between 1 and 20");
     }
+
+    @Test
+    void should_delegate_valid_job_details_request() {
+        var jobId = java.util.UUID.randomUUID();
+        var expected = mock(JobSearchService.JobDetailResult.class);
+        when(jobSearchService.getJob(jobId)).thenReturn(expected);
+
+        var result = jobMcpTools.getJobDetails(jobId.toString());
+
+        assertThat(result).isSameAs(expected);
+        verify(jobSearchService).getJob(jobId);
+    }
+
+    @Test
+    void should_reject_malformed_job_id_with_actionable_message() {
+        assertThatThrownBy(() -> jobMcpTools.getJobDetails("not-a-uuid"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("jobId must be a UUID returned by search_active_jobs");
+    }
 }

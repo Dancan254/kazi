@@ -6,7 +6,8 @@ spring:
         version: ${MCP_SERVER_VERSION:0.1.0}
         instructions: >
           Search the canonical Kazi job catalog. Use search_active_jobs when looking for
-          current jobs to recommend; results contain active jobs only, newest first.
+          current jobs to recommend; results contain active jobs only, newest first. Use
+          get_job_details with a returned job UUID before giving the user an application link.
         protocol: streamable
   application:
     name: kazi

@@ -61,14 +61,17 @@ Code is packaged by feature. `health` contains the health controller. `ingestion
 ```bash
 curl http://localhost:8080/api/health
 curl "http://localhost:8080/api/jobs?q=java&location=Nairobi&employmentType=FULL_TIME&page=0&size=20"
+curl http://localhost:8080/api/jobs/<job-uuid>
 ```
 
 `GET /api/jobs` returns active jobs, newest first. All filters are optional: `q` matches title, company, or description case-insensitively; `location` matches a location substring; `employmentType` accepts `FULL_TIME`, `PART_TIME`, `CONTRACT`, or `INTERNSHIP`. `page` is zero-based, `size` defaults to 20 and is capped at 100. Responses include `content`, `page`, `size`, `totalElements`, and `totalPages`.
 
-## MCP
-The server exposes streamable HTTP at `http://localhost:8080/mcp`. Its `search_active_jobs` tool accepts required `query` keywords plus optional `location`, `employmentType`, and `limit` arguments. Results are newest first and limited to 20. The endpoint is unauthenticated and intended for local development only.
+`GET /api/jobs/{id}` returns the complete job and a `sources` array containing each original source/application URL. A missing job returns a 404 ProblemDetail response.
 
-Inspect the available tools and call one with the MCP Inspector:
+## MCP
+The server exposes streamable HTTP at `http://localhost:8080/mcp`. Its `search_active_jobs` tool accepts required `query` keywords plus optional `location`, `employmentType`, and `limit` arguments. Results are newest first and limited to 20. `get_job_details` accepts a required `jobId` UUID from the search results and returns full details with original source/application links. The endpoint is unauthenticated and intended for local development only.
+
+Inspect the available tools and call them with the MCP Inspector:
 ```bash
 npx --yes @modelcontextprotocol/inspector@2.13.0 --cli \
   --transport http --server-url http://localhost:8080/mcp \
@@ -78,14 +81,19 @@ npx --yes @modelcontextprotocol/inspector@2.13.0 --cli \
   --transport http --server-url http://localhost:8080/mcp \
   --method tools/call --tool-name search_active_jobs \
   --tool-args-json '{"query":"java","limit":5}' --format json
+
+npx --yes @modelcontextprotocol/inspector@2.13.0 --cli \
+  --transport http --server-url http://localhost:8080/mcp \
+  --method tools/call --tool-name get_job_details \
+  --tool-args-json '{"jobId":"<job-uuid>"}' --format json
 ```
 
 ## Architecture decisions
 - [ADR-0001](docs/adr/0001-package-by-feature-monolith.md) — Package-by-feature monolith over microservices
 
 ## Testing
-The health integration test starts the application on a random port, runs Flyway against real PostgreSQL, and calls the endpoint over HTTP. Normalization and Adzuna mapping use small plain-JUnit tests. Focused tests prove Spring Framework retries and Resilience4j circuit breaking. Ingestion and job integration tests use real PostgreSQL to verify run audits, failure isolation, deterministic deduplication, merging, and source provenance. Kafka integration tests use a real broker to verify both topics, JSON events, keys, and source-run correlation. Search integration tests exercise filtering, case-insensitive keyword matching, and pagination through real HTTP requests to PostgreSQL. MCP tests validate tool arguments in plain JUnit and use a real MCP Java SDK client to list tools, call search, and verify error results without a live LLM.
+The health integration test starts the application on a random port, runs Flyway against real PostgreSQL, and calls the endpoint over HTTP. Normalization and Adzuna mapping use small plain-JUnit tests. Focused tests prove Spring Framework retries and Resilience4j circuit breaking. Ingestion and job integration tests use real PostgreSQL to verify run audits, failure isolation, deterministic deduplication, merging, and source provenance. Kafka integration tests use a real broker to verify both topics, JSON events, keys, and source-run correlation. Search integration tests exercise filtering, pagination, job details, source links, and 404 responses through real HTTP requests to PostgreSQL. MCP tests validate tool arguments in plain JUnit and use a real MCP Java SDK client to list tools, call search and job details, and verify error results without a live LLM.
 
 ## Status
-- Built: application foundation, database migration, health endpoint, source contract, normalization, Adzuna adapter, opt-in scheduling, run audits, canonical job persistence, deterministic deduplication, Kafka job event publishing, REST job search, MCP job-search tool, Docker Compose, and CI.
+- Built: application foundation, database migration, health endpoint, source contract, normalization, Adzuna adapter, opt-in scheduling, run audits, canonical job persistence, deterministic deduplication, Kafka job event publishing, REST job search and details, source/application links, MCP job-search and job-detail tools, Docker Compose, and CI.
 - Not built: other source adapters, fuzzy deduplication, event consumers, fuzzy and semantic search, Redis, MCP authentication, security hardening, and full observability.

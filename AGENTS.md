@@ -29,7 +29,8 @@ Add future domain code in feature packages.
 - Apache Kafka with JSON job events
 - `GET /api/health`
 - `GET /api/jobs` with keyword, location, employment-type, and pagination filters
-- `search_active_jobs` MCP tool with validated filters and a 20-result limit
+- `GET /api/jobs/{id}` with full job details and original source/application links
+- `search_active_jobs` and `get_job_details` MCP tools with validated arguments
 - Job source contract and raw-payload preservation
 - Company, title, location, salary, and employment-type normalization
 - Adzuna pagination and date filtering with timeouts, Spring Framework `@Retryable`, and Resilience4j circuit breaking

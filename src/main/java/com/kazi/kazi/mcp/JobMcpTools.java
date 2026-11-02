@@ -2,7 +2,9 @@ package com.kazi.kazi.mcp;
 
 import com.kazi.kazi.ingestion.normalization.NormalizedJob.EmploymentType;
 import com.kazi.kazi.search.JobSearchService;
+import com.kazi.kazi.search.JobSearchService.JobDetailResult;
 import com.kazi.kazi.search.JobSearchService.JobSearchResult;
+import java.util.UUID;
 import org.springframework.ai.mcp.annotation.McpTool;
 import org.springframework.ai.mcp.annotation.McpToolParam;
 import org.springframework.data.domain.PageRequest;
@@ -49,5 +51,28 @@ public class JobMcpTools {
         }
         var pageable = PageRequest.of(0, resultLimit, Sort.by(Sort.Direction.DESC, "createdAt"));
         return jobSearchService.search(query.trim(), location, employmentType, pageable);
+    }
+
+    @McpTool(
+        name = "get_job_details",
+        description = "Get full details and original source/application links for one job. "
+            + "Requires the job UUID returned by search_active_jobs; use this before giving a user an application link.",
+        annotations = @McpTool.McpAnnotations(
+            readOnlyHint = true,
+            idempotentHint = true,
+            openWorldHint = false
+        )
+    )
+    public JobDetailResult getJobDetails(
+        @McpToolParam(description = "Job UUID returned by search_active_jobs", required = true) String jobId
+    ) {
+        if (jobId == null || jobId.isBlank()) {
+            throw new IllegalArgumentException("jobId must be a UUID returned by search_active_jobs");
+        }
+        try {
+            return jobSearchService.getJob(UUID.fromString(jobId));
+        } catch (IllegalArgumentException exception) {
+            throw new IllegalArgumentException("jobId must be a UUID returned by search_active_jobs");
+        }
     }
 }
