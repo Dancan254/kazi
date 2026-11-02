@@ -15,16 +15,18 @@ No frontend or user accounts. Other source adapters, fuzzy deduplication, semant
 - `ingestion/run/` — persistent source-run audits
 - `ingestion/adzuna/` — Adzuna configuration, declarative `@HttpExchange` client, source adapter, response mapping, and scheduler
 - `job/` — canonical jobs, source provenance, deterministic deduplication, merge rules, and Kafka job events
+- `search/` — paginated REST job search and filtering
 - `shared/config/` — cross-cutting configuration
 - `KaziApplication.java` — application entry point
 
-Add future domain code in feature packages such as `search/` and `mcp/`.
+Add future domain code in feature packages such as `mcp/`.
 
 ## Current foundation
 - Java 25, Spring Boot 4.1.2, Maven
 - PostgreSQL 18 with pgvector and Flyway
 - Apache Kafka with JSON job events
 - `GET /api/health`
+- `GET /api/jobs` with keyword, location, employment-type, and pagination filters
 - Job source contract and raw-payload preservation
 - Company, title, location, salary, and employment-type normalization
 - Adzuna pagination and date filtering with timeouts, Spring Framework `@Retryable`, and Resilience4j circuit breaking
