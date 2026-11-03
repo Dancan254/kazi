@@ -189,7 +189,7 @@ Ingestion publishes versioned JSON events after saving each canonical job:
 Both use the job UUID as the Kafka key. The payload contains `schemaVersion`, `jobId`, `sourceRunId` for ingestion correlation, and `occurredAt`.
 
 ## Project structure
-Code is packaged by feature. `health` contains the health controller. `ingestion` contains orchestration and scheduling, with focused subpackages for `source` contracts, `normalization`, and persistent `run` audits. The `adzuna`, `greenhouse`, `lever`, `ashby`, `workday`, `smartrecruiters`, `workable`, `recruitee`, `personio`, `bamboohr`, and `discovery` subpackages contain their declarative `@HttpExchange` clients, source adapters, response mapping, and schedulers. `RestClient` is used only as the underlying transport. `job` contains canonical jobs, source provenance, deterministic deduplication, merge rules, and Kafka event publishing. `search` contains the shared job-search service, paginated REST endpoint, and response DTOs. `mcp` contains MCP tool adapters over domain use cases.
+Code is packaged by feature. `health` contains the health controller. `ingestion` contains orchestration and scheduling, with focused subpackages for `source` contracts, `normalization`, and persistent `run` audits. The `adzuna`, `greenhouse`, `lever`, `ashby`, `workday`, `smartrecruiters`, `workable`, `recruitee`, `personio`, `bamboohr`, and `discovery` subpackages contain their declarative `@HttpExchange` clients, source adapters, response mapping, and schedulers. `RestClient` is used only as the underlying transport. `job` contains canonical jobs, source provenance, deterministic and fuzzy deduplication, merge rules, and Kafka event publishing. `search` contains the shared job-search service, paginated REST endpoint, and response DTOs. `mcp` contains MCP tool adapters over domain use cases.
 
 ## API
 ```bash
@@ -202,8 +202,21 @@ curl http://localhost:8080/api/jobs/<job-uuid>
 
 `GET /api/jobs/{id}` returns the complete job and a `sources` array containing each original source/application URL. A missing job returns a 404 ProblemDetail response.
 
+## Semantic search
+Semantic retrieval uses local Ollama `nomic-embed-text` embeddings (768 dimensions) and pgvector cosine distance with an HNSW index. Job text is capped at 6,000 characters, and a content hash prevents unchanged jobs from being embedded again. Inactive jobs are excluded. No job content leaves the machine.
+
+Start the optional model service and pull the model once:
+
+```bash
+docker compose --profile semantic up -d ollama
+docker compose exec ollama ollama pull nomic-embed-text:v1.5
+SEMANTIC_SEARCH_ENABLED=true docker compose --profile semantic up -d --build app
+```
+
+Then query `GET /api/jobs/search/semantic?q=distributed%20java%20backend&limit=20`. Results are closest first and capped at 50 for REST. When `SEMANTIC_SEARCH_ENABLED` is false, the endpoint returns a 503 ProblemDetail response instead of silently substituting keyword search.
+
 ## MCP
-The server exposes streamable HTTP at `http://localhost:8080/mcp`. Its `search_active_jobs` tool accepts required `query` keywords plus optional `location`, `employmentType`, and `limit` arguments. Results are newest first and limited to 20. `get_job_details` accepts a required `jobId` UUID from the search results and returns full details with original source/application links. The endpoint is unauthenticated and intended for local development only.
+The server exposes streamable HTTP at `http://localhost:8080/mcp`. Its `search_active_jobs` tool accepts required `query` keywords plus optional `location`, `employmentType`, and `limit` arguments. Results are newest first and limited to 20. `semantic_search_jobs` accepts a required meaning-based `query` and optional `limit` and returns closest matches when semantic search is enabled. `get_job_details` accepts a required `jobId` UUID from the search results and returns full details with original source/application links. The endpoint is unauthenticated and intended for local development only.
 
 Inspect the available tools and call them with the MCP Inspector:
 ```bash
@@ -226,8 +239,8 @@ npx --yes @modelcontextprotocol/inspector@2.13.0 --cli \
 - [ADR-0001](docs/adr/0001-package-by-feature-monolith.md) — Package-by-feature monolith over microservices
 
 ## Testing
-The health integration test starts the application on a random port, runs Flyway against real PostgreSQL, and calls the endpoint over HTTP. Normalization and source mapping use small plain-JUnit tests with mocked HTTP responses. Focused tests prove Spring Framework retries and Resilience4j circuit breaking. Ingestion and job integration tests use real PostgreSQL to verify run audits, failure isolation, all source adapters, career-page discovery and routing, deterministic deduplication, merging, source provenance, multi-source deactivation, failed-fetch safety, and reactivation. Kafka integration tests use a real broker to verify both topics, JSON events, keys, and source-run correlation. Search integration tests exercise filtering, pagination, job details, source links, and 404 responses through real HTTP requests to PostgreSQL. MCP tests validate tool arguments in plain JUnit and use a real MCP Java SDK client to list tools, call search and job details, and verify error results without a live LLM.
+The health integration test starts the application on a random port, runs Flyway against real PostgreSQL, and calls the endpoint over HTTP. Normalization and source mapping use small plain-JUnit tests with mocked HTTP responses. Focused tests prove Spring Framework retries and Resilience4j circuit breaking. Ingestion and job integration tests use real PostgreSQL to verify run audits, failure isolation, all source adapters, career-page discovery and routing, deterministic and fuzzy deduplication, merging, source provenance, multi-source deactivation, failed-fetch safety, and reactivation. Kafka integration tests use a real broker to verify both topics, JSON events, keys, and source-run correlation. Search integration tests exercise filtering, pagination, job details, source links, semantic pgvector ranking, unchanged-content skipping, inactive-job exclusion, and error responses through real HTTP requests to PostgreSQL. MCP tests validate tool arguments in plain JUnit and use a real MCP Java SDK client to list tools, call keyword and semantic search and job details, and verify error results without a live LLM.
 
 ## Status
-- Built: application foundation, database migrations, health endpoint, source contract, normalization, Adzuna, multi-board Greenhouse, paginated multi-site Lever, multi-organization Ashby, paginated multi-site Workday, multi-company SmartRecruiters, multi-account Workable, multi-company Recruitee, multi-company Personio, and multi-company BambooHR adapters, career-site discovery and routing, opt-in scheduling, run audits, canonical job persistence, deterministic deduplication, full-snapshot job reconciliation, Kafka job event publishing, REST job search and details, source/application links, MCP job-search and job-detail tools, Docker Compose, and CI.
-- Not built: fuzzy deduplication, event consumers, fuzzy and semantic search, Redis, MCP authentication, security hardening, and full observability.
+- Built: application foundation, database migrations, health endpoint, source contract, normalization, Adzuna, multi-board Greenhouse, paginated multi-site Lever, multi-organization Ashby, paginated multi-site Workday, multi-company SmartRecruiters, multi-account Workable, multi-company Recruitee, multi-company Personio, and multi-company BambooHR adapters, career-site discovery and routing, opt-in scheduling, run audits, canonical job persistence, deterministic and fuzzy deduplication, full-snapshot job reconciliation, Kafka job event publishing, local Ollama embeddings and pgvector semantic search, REST keyword and semantic search and details, source/application links, MCP keyword and semantic search and job-detail tools, Docker Compose, and CI.
+- Not built: event consumers, Redis, MCP authentication, security hardening, and full observability.

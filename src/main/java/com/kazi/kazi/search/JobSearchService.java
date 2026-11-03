@@ -74,7 +74,7 @@ public class JobSearchService {
         Instant updatedAt
     ) {
 
-        private static JobResponse from(Job job) {
+        static JobResponse from(Job job) {
             return new JobResponse(
                 job.getId(),
                 job.getTitle(),

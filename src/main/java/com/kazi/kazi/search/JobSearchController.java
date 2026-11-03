@@ -19,9 +19,11 @@ import org.springframework.web.bind.annotation.RestController;
 class JobSearchController {
 
     private final JobSearchService jobSearchService;
+    private final SemanticSearchService semanticSearchService;
 
-    JobSearchController(JobSearchService jobSearchService) {
+    JobSearchController(JobSearchService jobSearchService, SemanticSearchService semanticSearchService) {
         this.jobSearchService = jobSearchService;
+        this.semanticSearchService = semanticSearchService;
     }
 
     @GetMapping("/api/jobs")
@@ -34,9 +36,28 @@ class JobSearchController {
         return jobSearchService.search(q, location, employmentType, pageable);
     }
 
+    @GetMapping("/api/jobs/search/semantic")
+    JobSearchResult searchSemantic(@RequestParam String q, @RequestParam(defaultValue = "20") int limit) {
+        return semanticSearchService.search(q, limit);
+    }
+
     @GetMapping("/api/jobs/{jobId}")
     JobDetailResult getJob(@PathVariable UUID jobId) {
         return jobSearchService.getJob(jobId);
+    }
+
+    @ExceptionHandler(SemanticSearchUnavailableException.class)
+    ProblemDetail semanticSearchUnavailable(SemanticSearchUnavailableException exception) {
+        var problem = ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, exception.getMessage());
+        problem.setTitle("Semantic search unavailable");
+        return problem;
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    ProblemDetail invalidSearch(IllegalArgumentException exception) {
+        var problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+        problem.setTitle("Invalid search");
+        return problem;
     }
 
     @ExceptionHandler(JobNotFoundException.class)

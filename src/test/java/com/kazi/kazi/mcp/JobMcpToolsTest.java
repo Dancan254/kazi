@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.kazi.kazi.search.JobSearchService;
+import com.kazi.kazi.search.SemanticSearchService;
 import com.kazi.kazi.search.JobSearchService.JobSearchResult;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -18,7 +19,19 @@ import org.springframework.data.domain.Pageable;
 class JobMcpToolsTest {
 
     private final JobSearchService jobSearchService = mock(JobSearchService.class);
-    private final JobMcpTools jobMcpTools = new JobMcpTools(jobSearchService);
+    private final SemanticSearchService semanticSearchService = mock(SemanticSearchService.class);
+    private final JobMcpTools jobMcpTools = new JobMcpTools(jobSearchService, semanticSearchService);
+
+    @Test
+    void should_delegate_semantic_search_with_requested_limit() {
+        var expected = new JobSearchResult(List.of(), 0, 5, 0, 0);
+        when(semanticSearchService.search("java backend", 5)).thenReturn(expected);
+
+        var result = jobMcpTools.semanticSearchJobs("java backend", 5);
+
+        assertThat(result).isSameAs(expected);
+        verify(semanticSearchService).search("java backend", 5);
+    }
 
     @Test
     void should_delegate_valid_search_with_requested_limit() {

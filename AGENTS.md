@@ -4,7 +4,7 @@
 An AI job aggregator backend that will normalize and deduplicate jobs from public APIs, then expose search through REST and MCP.
 
 ## What it is NOT
-No frontend or user accounts. Source adapters beyond Adzuna, Greenhouse, Lever, Ashby, Workday, SmartRecruiters, Workable, Recruitee, Personio, and BambooHR, fuzzy deduplication, semantic search, Redis, and production deployment are not implemented yet. The MCP endpoint is unauthenticated and intended for local development.
+No frontend or user accounts. Source adapters beyond Adzuna, Greenhouse, Lever, Ashby, Workday, SmartRecruiters, Workable, Recruitee, Personio, and BambooHR, Redis, and production deployment are not implemented yet. The MCP endpoint is unauthenticated and intended for local development.
 
 ## Package structure
 `com.kazi.kazi`
@@ -24,8 +24,8 @@ No frontend or user accounts. Source adapters beyond Adzuna, Greenhouse, Lever, 
 - `ingestion/personio/` — configurable Personio companies, secure XML parsing, response mapping, per-company provenance, and scheduler
 - `ingestion/bamboohr/` — configurable BambooHR companies, declarative list/detail client, response mapping, per-company provenance, and scheduler
 - `ingestion/discovery/` — public career-page link discovery, ATS URL routing, private-address protection, and scheduled ingestion
-- `job/` — canonical jobs, source provenance, deterministic deduplication, merge rules, and Kafka job events
-- `search/` — shared job-search use case, paginated REST endpoint, and response DTOs
+- `job/` — canonical jobs, source provenance, deterministic and fuzzy deduplication, merge rules, and Kafka job events
+- `search/` — shared keyword and semantic search, pgvector embeddings, paginated REST endpoints, and response DTOs
 - `mcp/` — MCP tool adapters over domain use cases
 - `shared/config/` — cross-cutting configuration
 - `KaziApplication.java` — application entry point
@@ -34,13 +34,14 @@ Add future domain code in feature packages.
 
 ## Current foundation
 - Java 25, Spring Boot 4.1.2, Maven
-- Spring AI 2.0.2 with streamable HTTP MCP at `/mcp`
+- Spring AI 2.0.2 with streamable HTTP MCP at `/mcp` and local Ollama embeddings
 - PostgreSQL 18 with pgvector and Flyway
 - Apache Kafka with JSON job events
 - `GET /api/health`
 - `GET /api/jobs` with keyword, location, employment-type, and pagination filters
+- `GET /api/jobs/search/semantic` with meaning-based pgvector retrieval
 - `GET /api/jobs/{id}` with full job details and original source/application links
-- `search_active_jobs` and `get_job_details` MCP tools with validated arguments
+- `search_active_jobs`, `semantic_search_jobs`, and `get_job_details` MCP tools with validated arguments
 - Job source contract and raw-payload preservation
 - Company, title, location, salary, and employment-type normalization
 - Adzuna pagination and date filtering with timeouts, Spring Framework `@Retryable`, and Resilience4j circuit breaking
@@ -55,7 +56,8 @@ Add future domain code in feature packages.
 - BambooHR multi-company ingestion with public detail mapping, compensation, remote locations, original job links, and `bamboohr:<site>` provenance
 - Career-page ATS link discovery and routing for all nine public platforms with redirect and private-address safeguards
 - Six-hour scheduling with nine verified default companies in Compose, opt-in direct runs, per-source failure isolation, and persistent `SourceRun` audits
-- Canonical job persistence with deterministic deduplication, merging, and distinct per-posting source provenance
+- Canonical job persistence with deterministic and fuzzy deduplication, merging, and distinct per-posting source provenance
+- Local 768-dimensional job embeddings with content-hash skipping, HNSW cosine retrieval, active-job filtering, REST and MCP access, and optional Ollama Compose service
 - Full-snapshot reconciliation for Greenhouse, Lever, Ashby, Workday, SmartRecruiters, Workable, Recruitee, Personio, and BambooHR with per-source activity, multi-source protection, failed-fetch safety, and reactivation
 - Docker Compose and GitHub Actions CI
 - Integration tests use real PostgreSQL, Kafka, and an MCP client; mapping and normalization tests are plain JUnit

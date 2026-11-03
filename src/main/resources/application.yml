@@ -5,10 +5,17 @@ spring:
         name: ${MCP_SERVER_NAME:kazi}
         version: ${MCP_SERVER_VERSION:0.1.0}
         instructions: >
-          Search the canonical Kazi job catalog. Use search_active_jobs when looking for
-          current jobs to recommend; results contain active jobs only, newest first. Use
+          Search the canonical Kazi job catalog. Use search_active_jobs for exact keywords or
+          semantic_search_jobs for meaning-based retrieval when semantic search is enabled. Use
           get_job_details with a returned job UUID before giving the user an application link.
         protocol: streamable
+    model:
+      embedding: ollama
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      embedding:
+        options:
+          model: ${OLLAMA_EMBEDDING_MODEL:nomic-embed-text:v1.5}
   application:
     name: kazi
   datasource:
@@ -49,6 +56,12 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+
+kazi:
+  semantic:
+    enabled: ${SEMANTIC_SEARCH_ENABLED:false}
+    model: ${OLLAMA_EMBEDDING_MODEL:nomic-embed-text:v1.5}
+    dimensions: 768
 
 ingestion:
   scheduling-enabled: ${INGESTION_SCHEDULING_ENABLED:false}

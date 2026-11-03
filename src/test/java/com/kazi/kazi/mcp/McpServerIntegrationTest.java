@@ -50,7 +50,7 @@ class McpServerIntegrationTest extends BaseIntegrationTest {
 
             assertThat(client.listTools().tools())
                 .extracting(McpSchema.Tool::name)
-                .contains("search_active_jobs", "get_job_details");
+                .contains("search_active_jobs", "semantic_search_jobs", "get_job_details");
 
             var result = client.callTool(new McpSchema.CallToolRequest(
                 "search_active_jobs",

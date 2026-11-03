@@ -8,6 +8,9 @@ services:
       DB_USER: ${DB_USER:-kazi}
       DB_PASSWORD: ${DB_PASSWORD:-kazi}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      OLLAMA_EMBEDDING_MODEL: ${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text:v1.5}
+      SEMANTIC_SEARCH_ENABLED: ${SEMANTIC_SEARCH_ENABLED:-false}
       ADZUNA_APP_ID: ${ADZUNA_APP_ID:-}
       ADZUNA_APP_KEY: ${ADZUNA_APP_KEY:-}
       ADZUNA_COUNTRY: ${ADZUNA_COUNTRY:-us}
@@ -95,5 +98,14 @@ services:
       timeout: 10s
       retries: 5
 
+  ollama:
+    image: ollama/ollama:0.40.14
+    profiles: [semantic]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+
 volumes:
   postgres_data:
+  ollama_models:
