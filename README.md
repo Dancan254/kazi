@@ -3,7 +3,7 @@
 An AI job aggregator backend for collecting, cleaning, and searching software engineering jobs through REST and MCP.
 
 ## What this is
-Kazi is intended to bring fragmented job listings into one canonical dataset. It is being built incrementally; the current release contains the application foundation, health endpoint, normalization, Adzuna, Greenhouse, and Lever source adapters, Kafka job events, REST job search and details, and MCP job tools.
+Kazi is intended to bring fragmented job listings into one canonical dataset. It is being built incrementally; the current release contains the application foundation, health endpoint, normalization, Adzuna, Greenhouse, Lever, and Ashby source adapters, Kafka job events, REST job search and details, and MCP job tools.
 
 ## Architecture
 
@@ -81,6 +81,19 @@ lever:
 
 Lever ingestion fetches every page, filters by `createdAt`, maps salary and remote locations, and stores the original apply URL. Each site is audited as `lever:<site>`. `LEVER_POLL_INTERVAL` defaults to `PT6H`.
 
+Ashby uses the public [Job Posting API](https://developers.ashbyhq.com/docs/public-job-posting-api) and needs no API key. Configure companies and board names with `ASHBY_ORGANIZATIONS_0_COMPANY` and `ASHBY_ORGANIZATIONS_0_BOARD` in `.env`; add higher indexes through a Compose override for more organizations. The YAML equivalent is:
+
+```yaml
+ashby:
+  organizations:
+    - company: Linear
+      board: linear
+    - company: Ashby
+      board: Ashby
+```
+
+Ashby ingestion requests compensation data, filters by `publishedAt`, maps employment and workplace types, prefers plain-text descriptions, and stores the original apply URL. Each board is audited as `ashby:<board>`. `ASHBY_POLL_INTERVAL` defaults to `PT6H`.
+
 ## Job events
 Ingestion publishes versioned JSON events after saving each canonical job:
 - `job.events.indexed` for a new job.
@@ -89,7 +102,7 @@ Ingestion publishes versioned JSON events after saving each canonical job:
 Both use the job UUID as the Kafka key. The payload contains `schemaVersion`, `jobId`, `sourceRunId` for ingestion correlation, and `occurredAt`.
 
 ## Project structure
-Code is packaged by feature. `health` contains the health controller. `ingestion` contains orchestration and scheduling, with focused subpackages for `source` contracts, `normalization`, and persistent `run` audits. The `adzuna`, `greenhouse`, and `lever` subpackages contain their declarative `@HttpExchange` clients, source adapters, response mapping, and schedulers. `RestClient` is used only as the underlying transport. `job` contains canonical jobs, source provenance, deterministic deduplication, merge rules, and Kafka event publishing. `search` contains the shared job-search service, paginated REST endpoint, and response DTOs. `mcp` contains MCP tool adapters over domain use cases.
+Code is packaged by feature. `health` contains the health controller. `ingestion` contains orchestration and scheduling, with focused subpackages for `source` contracts, `normalization`, and persistent `run` audits. The `adzuna`, `greenhouse`, `lever`, and `ashby` subpackages contain their declarative `@HttpExchange` clients, source adapters, response mapping, and schedulers. `RestClient` is used only as the underlying transport. `job` contains canonical jobs, source provenance, deterministic deduplication, merge rules, and Kafka event publishing. `search` contains the shared job-search service, paginated REST endpoint, and response DTOs. `mcp` contains MCP tool adapters over domain use cases.
 
 ## API
 ```bash
@@ -126,8 +139,8 @@ npx --yes @modelcontextprotocol/inspector@2.13.0 --cli \
 - [ADR-0001](docs/adr/0001-package-by-feature-monolith.md) — Package-by-feature monolith over microservices
 
 ## Testing
-The health integration test starts the application on a random port, runs Flyway against real PostgreSQL, and calls the endpoint over HTTP. Normalization and source mapping use small plain-JUnit tests with mocked HTTP responses. Focused tests prove Spring Framework retries and Resilience4j circuit breaking. Ingestion and job integration tests use real PostgreSQL to verify run audits, failure isolation, multi-board Greenhouse and multi-site Lever ingestion, deterministic deduplication, merging, and source provenance. Kafka integration tests use a real broker to verify both topics, JSON events, keys, and source-run correlation. Search integration tests exercise filtering, pagination, job details, source links, and 404 responses through real HTTP requests to PostgreSQL. MCP tests validate tool arguments in plain JUnit and use a real MCP Java SDK client to list tools, call search and job details, and verify error results without a live LLM.
+The health integration test starts the application on a random port, runs Flyway against real PostgreSQL, and calls the endpoint over HTTP. Normalization and source mapping use small plain-JUnit tests with mocked HTTP responses. Focused tests prove Spring Framework retries and Resilience4j circuit breaking. Ingestion and job integration tests use real PostgreSQL to verify run audits, failure isolation, multi-board Greenhouse, multi-site Lever, and multi-organization Ashby ingestion, deterministic deduplication, merging, and source provenance. Kafka integration tests use a real broker to verify both topics, JSON events, keys, and source-run correlation. Search integration tests exercise filtering, pagination, job details, source links, and 404 responses through real HTTP requests to PostgreSQL. MCP tests validate tool arguments in plain JUnit and use a real MCP Java SDK client to list tools, call search and job details, and verify error results without a live LLM.
 
 ## Status
-- Built: application foundation, database migration, health endpoint, source contract, normalization, Adzuna, multi-board Greenhouse, and paginated multi-site Lever adapters, opt-in scheduling, run audits, canonical job persistence, deterministic deduplication, Kafka job event publishing, REST job search and details, source/application links, MCP job-search and job-detail tools, Docker Compose, and CI.
+- Built: application foundation, database migration, health endpoint, source contract, normalization, Adzuna, multi-board Greenhouse, paginated multi-site Lever, and multi-organization Ashby adapters, opt-in scheduling, run audits, canonical job persistence, deterministic deduplication, Kafka job event publishing, REST job search and details, source/application links, MCP job-search and job-detail tools, Docker Compose, and CI.
 - Not built: additional source adapters, fuzzy deduplication, event consumers, fuzzy and semantic search, Redis, MCP authentication, security hardening, and full observability.

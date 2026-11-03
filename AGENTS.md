@@ -4,7 +4,7 @@
 An AI job aggregator backend that will normalize and deduplicate jobs from public APIs, then expose search through REST and MCP.
 
 ## What it is NOT
-No frontend or user accounts. Source adapters beyond Adzuna, Greenhouse, and Lever, fuzzy deduplication, semantic search, Redis, and production deployment are not implemented yet. The MCP endpoint is unauthenticated and intended for local development.
+No frontend or user accounts. Source adapters beyond Adzuna, Greenhouse, Lever, and Ashby, fuzzy deduplication, semantic search, Redis, and production deployment are not implemented yet. The MCP endpoint is unauthenticated and intended for local development.
 
 ## Package structure
 `com.kazi.kazi`
@@ -16,6 +16,7 @@ No frontend or user accounts. Source adapters beyond Adzuna, Greenhouse, and Lev
 - `ingestion/adzuna/` — Adzuna configuration, declarative `@HttpExchange` client, source adapter, response mapping, and scheduler
 - `ingestion/greenhouse/` — configurable Greenhouse boards, declarative client, response mapping, per-board provenance, and scheduler
 - `ingestion/lever/` — configurable Lever sites, paginated declarative client, response mapping, per-site provenance, and scheduler
+- `ingestion/ashby/` — configurable Ashby organizations, declarative client, response mapping, per-board provenance, and scheduler
 - `job/` — canonical jobs, source provenance, deterministic deduplication, merge rules, and Kafka job events
 - `search/` — shared job-search use case, paginated REST endpoint, and response DTOs
 - `mcp/` — MCP tool adapters over domain use cases
@@ -38,6 +39,7 @@ Add future domain code in feature packages.
 - Adzuna pagination and date filtering with timeouts, Spring Framework `@Retryable`, and Resilience4j circuit breaking
 - Greenhouse multi-board ingestion with configured company names, `updated_at` filtering, JSON-safe raw payloads, and `greenhouse:<token>` provenance
 - Lever multi-site ingestion with pagination, `createdAt` filtering, salary and remote-location mapping, original apply links, and `lever:<site>` provenance
+- Ashby multi-organization ingestion with `publishedAt` filtering, compensation and workplace mapping, plain-text descriptions, original apply links, and `ashby:<board>` provenance
 - Opt-in scheduling, per-source failure isolation, and persistent `SourceRun` audits
 - Canonical job persistence with deterministic deduplication, merging, and source provenance
 - Docker Compose and GitHub Actions CI

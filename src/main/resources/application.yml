@@ -90,6 +90,16 @@ lever:
     multiplier: 2
     max-delay-ms: 30000
 
+ashby:
+  base-url: ${ASHBY_BASE_URL:https://api.ashbyhq.com/posting-api/job-board}
+  poll-interval: ${ASHBY_POLL_INTERVAL:PT6H}
+  retry:
+    max-retries: 2
+    delay-ms: 2000
+    jitter-ms: 500
+    multiplier: 2
+    max-delay-ms: 30000
+
 resilience4j:
   circuitbreaker:
     instances:
@@ -104,6 +114,11 @@ resilience4j:
         failure-rate-threshold: 50
         wait-duration-in-open-state: 30s
       lever:
+        sliding-window-size: 10
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+      ashby:
         sliding-window-size: 10
         minimum-number-of-calls: 10
         failure-rate-threshold: 50
