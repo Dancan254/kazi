@@ -4,7 +4,7 @@
 An AI job aggregator backend that will normalize and deduplicate jobs from public APIs, then expose search through REST and MCP.
 
 ## What it is NOT
-No frontend or user accounts. Source adapters beyond Adzuna, Greenhouse, Lever, Ashby, Workday, and SmartRecruiters, fuzzy deduplication, semantic search, Redis, and production deployment are not implemented yet. The MCP endpoint is unauthenticated and intended for local development.
+No frontend or user accounts. Source adapters beyond Adzuna, Greenhouse, Lever, Ashby, Workday, SmartRecruiters, and Workable, fuzzy deduplication, semantic search, Redis, and production deployment are not implemented yet. The MCP endpoint is unauthenticated and intended for local development.
 
 ## Package structure
 `com.kazi.kazi`
@@ -19,6 +19,7 @@ No frontend or user accounts. Source adapters beyond Adzuna, Greenhouse, Lever, 
 - `ingestion/ashby/` — configurable Ashby organizations, declarative client, response mapping, per-board provenance, and scheduler
 - `ingestion/workday/` — configurable Workday career sites, paginated declarative client, detail mapping, per-site provenance, and scheduler
 - `ingestion/smartrecruiters/` — configurable SmartRecruiters companies, paginated declarative client, public detail mapping, per-company provenance, and scheduler
+- `ingestion/workable/` — configurable Workable accounts, declarative client, response mapping, per-account provenance, and scheduler
 - `job/` — canonical jobs, source provenance, deterministic deduplication, merge rules, and Kafka job events
 - `search/` — shared job-search use case, paginated REST endpoint, and response DTOs
 - `mcp/` — MCP tool adapters over domain use cases
@@ -44,9 +45,10 @@ Add future domain code in feature packages.
 - Ashby multi-organization ingestion with `publishedAt` filtering, compensation and workplace mapping, plain-text descriptions, original apply links, and `ashby:<board>` provenance
 - Workday multi-site ingestion with 20-item pagination, public detail mapping, original job links, and `workday:<tenant>/<site>` provenance
 - SmartRecruiters multi-company ingestion with offset pagination, public detail mapping, original apply links, and `smartrecruiters:<identifier>` provenance
+- Workable multi-account ingestion with full descriptions, publication dates, remote and multi-location mapping, original apply links, and `workable:<account>` provenance
 - Opt-in scheduling, per-source failure isolation, and persistent `SourceRun` audits
 - Canonical job persistence with deterministic deduplication, merging, and distinct per-posting source provenance
-- Full-snapshot reconciliation for Greenhouse, Lever, Ashby, Workday, and SmartRecruiters with per-source activity, multi-source protection, failed-fetch safety, and reactivation
+- Full-snapshot reconciliation for Greenhouse, Lever, Ashby, Workday, SmartRecruiters, and Workable with per-source activity, multi-source protection, failed-fetch safety, and reactivation
 - Docker Compose and GitHub Actions CI
 - Integration tests use real PostgreSQL, Kafka, and an MCP client; mapping and normalization tests are plain JUnit
 
