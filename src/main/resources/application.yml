@@ -1,4 +1,6 @@
 spring:
+  autoconfigure:
+    exclude: org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration
   ai:
     mcp:
       server:
@@ -58,6 +60,8 @@ management:
       show-details: when-authorized
 
 kazi:
+  security:
+    api-key: ${KAZI_API_KEY:}
   semantic:
     enabled: ${SEMANTIC_SEARCH_ENABLED:false}
     model: ${OLLAMA_EMBEDDING_MODEL:nomic-embed-text:v1.5}
