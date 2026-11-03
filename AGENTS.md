@@ -4,7 +4,7 @@
 An AI job aggregator backend that will normalize and deduplicate jobs from public APIs, then expose search through REST and MCP.
 
 ## What it is NOT
-No frontend or user accounts. Source adapters beyond Adzuna, Greenhouse, Lever, Ashby, Workday, SmartRecruiters, Workable, Recruitee, and Personio, fuzzy deduplication, semantic search, Redis, and production deployment are not implemented yet. The MCP endpoint is unauthenticated and intended for local development.
+No frontend or user accounts. Source adapters beyond Adzuna, Greenhouse, Lever, Ashby, Workday, SmartRecruiters, Workable, Recruitee, Personio, and BambooHR, fuzzy deduplication, semantic search, Redis, and production deployment are not implemented yet. The MCP endpoint is unauthenticated and intended for local development.
 
 ## Package structure
 `com.kazi.kazi`
@@ -22,6 +22,7 @@ No frontend or user accounts. Source adapters beyond Adzuna, Greenhouse, Lever, 
 - `ingestion/workable/` — configurable Workable accounts, declarative client, response mapping, per-account provenance, and scheduler
 - `ingestion/recruitee/` — configurable Recruitee companies, declarative client, response mapping, per-company provenance, and scheduler
 - `ingestion/personio/` — configurable Personio companies, secure XML parsing, response mapping, per-company provenance, and scheduler
+- `ingestion/bamboohr/` — configurable BambooHR companies, declarative list/detail client, response mapping, per-company provenance, and scheduler
 - `job/` — canonical jobs, source provenance, deterministic deduplication, merge rules, and Kafka job events
 - `search/` — shared job-search use case, paginated REST endpoint, and response DTOs
 - `mcp/` — MCP tool adapters over domain use cases
@@ -50,9 +51,10 @@ Add future domain code in feature packages.
 - Workable multi-account ingestion with full descriptions, publication dates, remote and multi-location mapping, original apply links, and `workable:<account>` provenance
 - Recruitee multi-company ingestion with salary, publication-time, remote and office-location mapping, original career links, and `recruitee:<site>` provenance
 - Personio multi-company ingestion with secure XML parsing, descriptions, schedules, office mapping, original job links, and `personio:<site>` provenance
+- BambooHR multi-company ingestion with public detail mapping, compensation, remote locations, original job links, and `bamboohr:<site>` provenance
 - Opt-in scheduling, per-source failure isolation, and persistent `SourceRun` audits
 - Canonical job persistence with deterministic deduplication, merging, and distinct per-posting source provenance
-- Full-snapshot reconciliation for Greenhouse, Lever, Ashby, Workday, SmartRecruiters, Workable, Recruitee, and Personio with per-source activity, multi-source protection, failed-fetch safety, and reactivation
+- Full-snapshot reconciliation for Greenhouse, Lever, Ashby, Workday, SmartRecruiters, Workable, Recruitee, Personio, and BambooHR with per-source activity, multi-source protection, failed-fetch safety, and reactivation
 - Docker Compose and GitHub Actions CI
 - Integration tests use real PostgreSQL, Kafka, and an MCP client; mapping and normalization tests are plain JUnit
 
