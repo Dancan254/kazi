@@ -45,7 +45,9 @@ For disposable development PostgreSQL and Kafka containers:
 ./mvnw spring-boot:test-run
 ```
 
-Adzuna reads `ADZUNA_APP_ID` and `ADZUNA_APP_KEY`, with optional `ADZUNA_COUNTRY` and `ADZUNA_CURRENCY` overrides. Scheduling is disabled by default; set `INGESTION_SCHEDULING_ENABLED=true` to enable the six-hour poll interval. `INGESTION_INITIAL_DELAY` controls the first run. `KAFKA_BOOTSTRAP_SERVERS` overrides the default `localhost:9092` broker address.
+Docker Compose enables six-hour ingestion after a ten-second startup delay and configures nine public companies by default: Vercel (Greenhouse), Palantir (Lever), Linear (Ashby), Workday, SmartRecruiters, Hugging Face (Workable), Helloprint (Recruitee), Karla (Personio), and Fly.io (BambooHR). Set `INGESTION_SCHEDULING_ENABLED=false` to disable polling or override any company's environment variables. Direct Maven runs remain opt-in; set `INGESTION_SCHEDULING_ENABLED=true` to enable them. `INGESTION_INITIAL_DELAY` controls the first run.
+
+Adzuna reads `ADZUNA_APP_ID` and `ADZUNA_APP_KEY`, with optional `ADZUNA_COUNTRY` and `ADZUNA_CURRENCY` overrides; it stays inactive without credentials. `KAFKA_BOOTSTRAP_SERVERS` overrides the default `localhost:9092` broker address.
 
 Greenhouse uses the public, read-only Job Board API and needs no API key. Configure each company's display name and board token; board 0 can be set directly in `.env` for Docker Compose:
 

@@ -54,7 +54,7 @@ Add future domain code in feature packages.
 - Personio multi-company ingestion with secure XML parsing, descriptions, schedules, office mapping, original job links, and `personio:<site>` provenance
 - BambooHR multi-company ingestion with public detail mapping, compensation, remote locations, original job links, and `bamboohr:<site>` provenance
 - Career-page ATS link discovery and routing for all nine public platforms with redirect and private-address safeguards
-- Opt-in scheduling, per-source failure isolation, and persistent `SourceRun` audits
+- Six-hour scheduling with nine verified default companies in Compose, opt-in direct runs, per-source failure isolation, and persistent `SourceRun` audits
 - Canonical job persistence with deterministic deduplication, merging, and distinct per-posting source provenance
 - Full-snapshot reconciliation for Greenhouse, Lever, Ashby, Workday, SmartRecruiters, Workable, Recruitee, Personio, and BambooHR with per-source activity, multi-source protection, failed-fetch safety, and reactivation
 - Docker Compose and GitHub Actions CI

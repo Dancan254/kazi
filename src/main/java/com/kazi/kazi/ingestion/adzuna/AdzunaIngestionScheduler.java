@@ -11,10 +11,16 @@ class AdzunaIngestionScheduler {
 
     private final IngestionService ingestionService;
     private final AdzunaJobSource adzunaJobSource;
+    private final AdzunaProperties properties;
 
-    AdzunaIngestionScheduler(IngestionService ingestionService, AdzunaJobSource adzunaJobSource) {
+    AdzunaIngestionScheduler(
+        IngestionService ingestionService,
+        AdzunaJobSource adzunaJobSource,
+        AdzunaProperties properties
+    ) {
         this.ingestionService = ingestionService;
         this.adzunaJobSource = adzunaJobSource;
+        this.properties = properties;
     }
 
     @Scheduled(
@@ -22,6 +28,12 @@ class AdzunaIngestionScheduler {
         initialDelayString = "${ingestion.initial-delay:PT0S}"
     )
     void ingest() {
-        ingestionService.ingest(adzunaJobSource);
+        if (hasText(properties.appId()) && hasText(properties.appKey())) {
+            ingestionService.ingest(adzunaJobSource);
+        }
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 }
