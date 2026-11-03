@@ -19,4 +19,9 @@ record AshbyOrganizationSource(
     public List<RawJob> fetchSince(Instant lastRun) {
         return jobSource.fetchSince(organization, lastRun);
     }
+
+    @Override
+    public boolean providesFullSnapshot() {
+        return true;
+    }
 }

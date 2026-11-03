@@ -10,4 +10,8 @@ public interface JobSourceLinkRepository extends ListCrudRepository<JobSourceLin
     Optional<JobSourceLink> findByJob_IdAndSourceName(UUID jobId, String sourceName);
 
     List<JobSourceLink> findByJob_IdOrderByFirstSeenAtAsc(UUID jobId);
+
+    List<JobSourceLink> findBySourceNameAndActiveTrue(String sourceName);
+
+    boolean existsByJob_IdAndActiveTrue(UUID jobId);
 }

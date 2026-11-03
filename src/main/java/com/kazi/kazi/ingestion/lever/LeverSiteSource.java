@@ -19,4 +19,9 @@ record LeverSiteSource(
     public List<RawJob> fetchSince(Instant lastRun) {
         return jobSource.fetchSince(site, lastRun);
     }
+
+    @Override
+    public boolean providesFullSnapshot() {
+        return true;
+    }
 }

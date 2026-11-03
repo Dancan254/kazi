@@ -80,6 +80,20 @@ class GreenhouseIngestionIntegrationTest extends BaseIntegrationTest {
             .containsExactlyInAnyOrder("acme", "beta");
     }
 
+    @Test
+    void should_deactivate_a_job_removed_from_the_board() {
+        when(httpClient.getJobs("acme", true)).thenReturn(response(12345L, "Java Engineer"));
+        when(httpClient.getJobs("beta", true)).thenReturn(new GreenhouseResponse(List.of()));
+        scheduler.ingest();
+        assertThat(jobRepository.findAll().getFirst().getStatus()).isEqualTo("active");
+
+        when(httpClient.getJobs("acme", true)).thenReturn(new GreenhouseResponse(List.of()));
+        scheduler.ingest();
+
+        assertThat(jobRepository.findAll().getFirst().getStatus()).isEqualTo("inactive");
+        assertThat(sourceLinkRepository.findAll().getFirst().isActive()).isFalse();
+    }
+
     private GreenhouseResponse response(Long id, String title) {
         return new GreenhouseResponse(List.of(new GreenhouseJob(
             id,

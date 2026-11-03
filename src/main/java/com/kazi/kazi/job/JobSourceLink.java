@@ -46,6 +46,9 @@ public class JobSourceLink {
     @Column(nullable = false)
     private Instant lastSeenAt;
 
+    @Column(nullable = false)
+    private boolean active;
+
     protected JobSourceLink() {
     }
 
@@ -64,6 +67,7 @@ public class JobSourceLink {
         this.rawData = rawData;
         this.firstSeenAt = now;
         this.lastSeenAt = now;
+        this.active = true;
     }
 
     void seenAgain(String sourceUrl, String sourceJobId, Map<String, Object> rawData, Instant now) {
@@ -71,10 +75,19 @@ public class JobSourceLink {
         this.sourceJobId = sourceJobId;
         this.rawData = rawData;
         this.lastSeenAt = now;
+        this.active = true;
+    }
+
+    void deactivate() {
+        this.active = false;
     }
 
     public UUID getId() {
         return id;
+    }
+
+    Job getJob() {
+        return job;
     }
 
     public String getSourceName() {
@@ -99,5 +112,9 @@ public class JobSourceLink {
 
     public Instant getLastSeenAt() {
         return lastSeenAt;
+    }
+
+    public boolean isActive() {
+        return active;
     }
 }

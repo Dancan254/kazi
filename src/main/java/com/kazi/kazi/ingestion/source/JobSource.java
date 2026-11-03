@@ -10,6 +10,10 @@ public interface JobSource {
 
     List<RawJob> fetchSince(Instant lastRun);
 
+    default boolean providesFullSnapshot() {
+        return false;
+    }
+
     default Duration pollInterval() {
         return Duration.ofHours(6);
     }

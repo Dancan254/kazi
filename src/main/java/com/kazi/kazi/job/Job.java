@@ -89,6 +89,12 @@ public class Job {
         if (specificity(location) > specificity(this.location)) {
             this.location = location;
         }
+        status = "active";
+        updatedAt = now;
+    }
+
+    void deactivate(Instant now) {
+        status = "inactive";
         updatedAt = now;
     }
 

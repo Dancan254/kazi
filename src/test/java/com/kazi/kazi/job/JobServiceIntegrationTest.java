@@ -8,6 +8,7 @@ import com.kazi.kazi.ingestion.normalization.NormalizedJob;
 import com.kazi.kazi.ingestion.source.RawJob;
 import java.time.Instant;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,6 +73,40 @@ class JobServiceIntegrationTest extends BaseIntegrationTest {
 
         assertThat(jobRepository.findAll()).hasSize(1);
         assertThat(sourceLinkRepository.findAll()).hasSize(1);
+    }
+
+    @Test
+    void should_deactivate_job_only_after_all_sources_are_missing() {
+        jobService.save(normalizedJob("adzuna", "Description", null));
+        jobService.save(normalizedJob("greenhouse", "Description", null));
+
+        jobService.deactivateMissing("adzuna", Set.of());
+
+        Job job = jobRepository.findAll().getFirst();
+        assertThat(job.getStatus()).isEqualTo("active");
+        assertThat(sourceLinkRepository.findAll())
+            .extracting(JobSourceLink::getSourceName, JobSourceLink::isActive)
+            .containsExactlyInAnyOrder(
+                org.assertj.core.groups.Tuple.tuple("adzuna", false),
+                org.assertj.core.groups.Tuple.tuple("greenhouse", true)
+            );
+
+        jobService.deactivateMissing("greenhouse", Set.of());
+
+        assertThat(jobRepository.findAll().getFirst().getStatus()).isEqualTo("inactive");
+        assertThat(sourceLinkRepository.findAll()).allMatch(source -> !source.isActive());
+    }
+
+    @Test
+    void should_reactivate_job_when_a_source_returns_it() {
+        jobService.save(normalizedJob("adzuna", "Description", null));
+        jobService.deactivateMissing("adzuna", Set.of());
+        assertThat(jobRepository.findAll().getFirst().getStatus()).isEqualTo("inactive");
+
+        jobService.save(normalizedJob("adzuna", "Description", null));
+
+        assertThat(jobRepository.findAll().getFirst().getStatus()).isEqualTo("active");
+        assertThat(sourceLinkRepository.findAll().getFirst().isActive()).isTrue();
     }
 
     private NormalizedJob normalizedJob(String sourceName, String description, String salary) {

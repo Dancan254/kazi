@@ -8,8 +8,10 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
@@ -65,6 +67,24 @@ public class JobService {
             ));
         }
         return new SavedJob(job.getId(), inserted);
+    }
+
+    @Transactional
+    public void deactivateMissing(String sourceName, Set<String> sourceJobIds) {
+        List<JobSourceLink> activeLinks = sourceLinkRepository.findBySourceNameAndActiveTrue(sourceName);
+        for (JobSourceLink link : activeLinks) {
+            if (sourceJobIds.contains(link.getSourceJobId())) {
+                continue;
+            }
+
+            link.deactivate();
+            sourceLinkRepository.save(link);
+            Job job = link.getJob();
+            if (!sourceLinkRepository.existsByJob_IdAndActiveTrue(job.getId())) {
+                job.deactivate(clock.instant());
+                jobRepository.save(job);
+            }
+        }
     }
 
     private String deterministicKey(NormalizedJob job) {

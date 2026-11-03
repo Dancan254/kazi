@@ -19,4 +19,9 @@ record GreenhouseBoardSource(
     public List<RawJob> fetchSince(Instant lastRun) {
         return jobSource.fetchSince(board, lastRun);
     }
+
+    @Override
+    public boolean providesFullSnapshot() {
+        return true;
+    }
 }

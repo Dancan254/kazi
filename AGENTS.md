@@ -42,6 +42,7 @@ Add future domain code in feature packages.
 - Ashby multi-organization ingestion with `publishedAt` filtering, compensation and workplace mapping, plain-text descriptions, original apply links, and `ashby:<board>` provenance
 - Opt-in scheduling, per-source failure isolation, and persistent `SourceRun` audits
 - Canonical job persistence with deterministic deduplication, merging, and source provenance
+- Full-snapshot reconciliation for Greenhouse, Lever, and Ashby with per-source activity, multi-source protection, failed-fetch safety, and reactivation
 - Docker Compose and GitHub Actions CI
 - Integration tests use real PostgreSQL, Kafka, and an MCP client; mapping and normalization tests are plain JUnit
 

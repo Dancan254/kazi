@@ -11,6 +11,8 @@ import com.kazi.kazi.job.JobService;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -43,7 +45,7 @@ public class IngestionService {
     public SourceRun ingest(JobSource source) {
         SourceRun run = sourceRunRepository.save(new SourceRun(source.sourceName(), clock.instant()));
         try {
-            Instant lastRun = sourceRunRepository
+            Instant lastRun = source.providesFullSnapshot() ? null : sourceRunRepository
                 .findFirstBySourceNameAndStatusOrderByFinishedAtDesc(
                     source.sourceName(),
                     SourceRunStatus.COMPLETED
@@ -58,6 +60,12 @@ public class IngestionService {
                 if (savedJob.inserted()) {
                     inserted++;
                 }
+            }
+            if (source.providesFullSnapshot()) {
+                Set<String> sourceJobIds = jobs.stream()
+                    .map(RawJob::sourceJobId)
+                    .collect(Collectors.toSet());
+                jobService.deactivateMissing(source.sourceName(), sourceJobIds);
             }
             run.complete(clock.instant(), jobs.size(), inserted);
         } catch (Exception exception) {
