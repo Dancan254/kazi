@@ -120,6 +120,58 @@ class JobServiceIntegrationTest extends BaseIntegrationTest {
         assertThat(sourceLinkRepository.findAll().getFirst().isActive()).isTrue();
     }
 
+    @Test
+    void should_fuzzy_merge_minor_title_variation() {
+        jobService.save(normalizedJobWithTitle("adzuna", "posting-1", "Sr. SWE (Backend)", "Nairobi, Kenya"));
+
+        var savedJob = jobService.save(normalizedJobWithTitle(
+            "greenhouse",
+            "posting-2",
+            "Senior Software Engineer Backen",
+            "Nairobi, Kenya"
+        ));
+
+        assertThat(savedJob.inserted()).isFalse();
+        assertThat(jobRepository.findAll()).hasSize(1);
+        assertThat(sourceLinkRepository.findAll()).hasSize(2);
+    }
+
+    @Test
+    void should_not_fuzzy_merge_jobs_in_different_locations() {
+        jobService.save(normalizedJobWithTitle("adzuna", "posting-1", "Sr. SWE (Backend)", "Nairobi, Kenya"));
+
+        var savedJob = jobService.save(normalizedJobWithTitle(
+            "greenhouse",
+            "posting-2",
+            "Senior Software Engineer Backen",
+            "Lagos, Nigeria"
+        ));
+
+        assertThat(savedJob.inserted()).isTrue();
+        assertThat(jobRepository.findAll()).hasSize(2);
+    }
+
+    private NormalizedJob normalizedJobWithTitle(
+        String sourceName,
+        String sourceJobId,
+        String title,
+        String location
+    ) {
+        return normalizer.normalize(new RawJob(
+            sourceName,
+            sourceJobId,
+            "https://example.com/" + sourceName + "/" + sourceJobId,
+            title,
+            "JPMorgan Chase & Co.",
+            location,
+            null,
+            "Full Time",
+            "Description",
+            Instant.parse("2026-11-01T00:00:00Z"),
+            Map.of("id", sourceJobId)
+        ));
+    }
+
     private NormalizedJob normalizedJob(String sourceName, String description, String salary) {
         return normalizedJob(sourceName, description, salary, sourceName + "-1");
     }

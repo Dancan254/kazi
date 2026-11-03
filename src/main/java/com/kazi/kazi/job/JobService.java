@@ -38,7 +38,8 @@ public class JobService {
         String deterministicKey = deterministicKey(normalizedJob);
         String location = location(normalizedJob);
         Instant now = clock.instant();
-        var existingJob = jobRepository.findByDeterministicKey(deterministicKey);
+        var existingJob = jobRepository.findByDeterministicKey(deterministicKey)
+            .or(() -> fuzzyMatch(normalizedJob, location));
         boolean inserted = existingJob.isEmpty();
 
         Job job = existingJob
@@ -88,6 +89,12 @@ public class JobService {
                 jobRepository.save(job);
             }
         }
+    }
+
+    private java.util.Optional<Job> fuzzyMatch(NormalizedJob candidate, String location) {
+        return jobRepository.findTop50ByCompanyOrderByUpdatedAtDesc(candidate.company()).stream()
+            .filter(existing -> JobSimilarity.isDuplicate(candidate, existing, location))
+            .findFirst();
     }
 
     private String deterministicKey(NormalizedJob job) {
