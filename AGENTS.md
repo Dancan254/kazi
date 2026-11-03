@@ -4,7 +4,7 @@
 An AI job aggregator backend that will normalize and deduplicate jobs from public APIs, then expose search through REST and MCP.
 
 ## What it is NOT
-No frontend or user accounts. Source adapters beyond Adzuna, Greenhouse, Lever, Ashby, Workday, SmartRecruiters, Workable, Recruitee, Personio, and BambooHR, Redis, and production deployment are not implemented yet. The MCP endpoint is unauthenticated and intended for local development.
+No frontend or user accounts. Source adapters beyond Adzuna, Greenhouse, Lever, Ashby, Workday, SmartRecruiters, Workable, Recruitee, Personio, and BambooHR and Redis are not implemented. Production Compose configuration is provided, but no external cloud deployment is configured.
 
 ## Package structure
 `com.kazi.kazi`
@@ -59,7 +59,9 @@ Add future domain code in feature packages.
 - Canonical job persistence with deterministic and fuzzy deduplication, merging, and distinct per-posting source provenance
 - Event-driven local 768-dimensional job embeddings with both Kafka topic consumers, content-hash skipping, HNSW cosine retrieval, active-job filtering, REST and MCP access, and optional Ollama Compose service
 - Full-snapshot reconciliation for Greenhouse, Lever, Ashby, Workday, SmartRecruiters, Workable, Recruitee, Personio, and BambooHR with per-source activity, multi-source protection, failed-fetch safety, and reactivation
-- Docker Compose and GitHub Actions CI
+- Optional API-key authentication for `/mcp/**` and `/actuator/metrics/**`; blank keys allow local development, while production Compose requires a key
+- OpenTelemetry metrics, traces, and logs with an optional Grafana LGTM Compose profile; exporters are disabled by default and in integration tests
+- Development and production Docker Compose configuration and GitHub Actions CI
 - Integration tests use real PostgreSQL, Kafka, and an MCP client; mapping and normalization tests are plain JUnit
 
 ## How to run

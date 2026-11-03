@@ -1,0 +1,18 @@
+services:
+  app:
+    restart: unless-stopped
+    environment:
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD to a strong database password}
+      KAZI_API_KEY: ${KAZI_API_KEY:?Set KAZI_API_KEY to a strong MCP API key}
+      DEPLOYMENT_ENVIRONMENT: ${DEPLOYMENT_ENVIRONMENT:-production}
+      OTEL_SAMPLING_PROBABILITY: ${OTEL_SAMPLING_PROBABILITY:-0.1}
+
+  postgres:
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD to a strong database password}
+    ports: !reset []
+
+  kafka:
+    restart: unless-stopped
+    ports: !reset []
