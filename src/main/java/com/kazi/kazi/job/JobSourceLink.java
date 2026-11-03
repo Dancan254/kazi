@@ -33,7 +33,7 @@ public class JobSourceLink {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String sourceUrl;
 
-    @Column(length = 200)
+    @Column(columnDefinition = "TEXT")
     private String sourceJobId;
 
     @JdbcTypeCode(SqlTypes.JSON)
@@ -70,7 +70,14 @@ public class JobSourceLink {
         this.active = true;
     }
 
-    void seenAgain(String sourceUrl, String sourceJobId, Map<String, Object> rawData, Instant now) {
+    void seenAgain(
+        Job job,
+        String sourceUrl,
+        String sourceJobId,
+        Map<String, Object> rawData,
+        Instant now
+    ) {
+        this.job = job;
         this.sourceUrl = sourceUrl;
         this.sourceJobId = sourceJobId;
         this.rawData = rawData;

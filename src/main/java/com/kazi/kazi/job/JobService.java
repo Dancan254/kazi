@@ -51,10 +51,13 @@ public class JobService {
 
         RawJob rawJob = normalizedJob.rawJob();
         Map<String, Object> rawData = rawJob.rawData() == null ? Map.of() : rawJob.rawData();
-        var sourceLink = sourceLinkRepository.findByJob_IdAndSourceName(job.getId(), rawJob.sourceName());
+        var sourceLink = sourceLinkRepository.findBySourceNameAndSourceJobId(
+            rawJob.sourceName(),
+            rawJob.sourceJobId()
+        );
         if (sourceLink.isPresent()) {
             JobSourceLink link = sourceLink.get();
-            link.seenAgain(rawJob.sourceUrl(), rawJob.sourceJobId(), rawData, now);
+            link.seenAgain(job, rawJob.sourceUrl(), rawJob.sourceJobId(), rawData, now);
             sourceLinkRepository.save(link);
         } else {
             sourceLinkRepository.save(new JobSourceLink(

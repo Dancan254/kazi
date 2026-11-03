@@ -76,6 +76,17 @@ class JobServiceIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
+    void should_keep_distinct_source_postings_when_they_merge_into_one_job() {
+        jobService.save(normalizedJob("workday", "Description", null, "posting-1"));
+        jobService.save(normalizedJob("workday", "Description", null, "posting-2"));
+
+        assertThat(jobRepository.findAll()).hasSize(1);
+        assertThat(sourceLinkRepository.findAll())
+            .extracting(JobSourceLink::getSourceJobId)
+            .containsExactlyInAnyOrder("posting-1", "posting-2");
+    }
+
+    @Test
     void should_deactivate_job_only_after_all_sources_are_missing() {
         jobService.save(normalizedJob("adzuna", "Description", null));
         jobService.save(normalizedJob("greenhouse", "Description", null));
@@ -110,10 +121,19 @@ class JobServiceIntegrationTest extends BaseIntegrationTest {
     }
 
     private NormalizedJob normalizedJob(String sourceName, String description, String salary) {
+        return normalizedJob(sourceName, description, salary, sourceName + "-1");
+    }
+
+    private NormalizedJob normalizedJob(
+        String sourceName,
+        String description,
+        String salary,
+        String sourceJobId
+    ) {
         return normalizer.normalize(new RawJob(
             sourceName,
-            sourceName + "-1",
-            "https://example.com/" + sourceName + "/job-1",
+            sourceJobId,
+            "https://example.com/" + sourceName + "/" + sourceJobId,
             "Sr. SWE (Backend)",
             "JPMorgan Chase & Co.",
             "Nairobi, Kenya (Remote)",
@@ -121,7 +141,7 @@ class JobServiceIntegrationTest extends BaseIntegrationTest {
             "Full Time",
             description,
             Instant.parse("2026-11-01T00:00:00Z"),
-            Map.of("id", sourceName + "-1")
+            Map.of("id", sourceJobId)
         ));
     }
 }

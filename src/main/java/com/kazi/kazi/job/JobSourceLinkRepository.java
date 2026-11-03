@@ -7,7 +7,7 @@ import org.springframework.data.repository.ListCrudRepository;
 
 public interface JobSourceLinkRepository extends ListCrudRepository<JobSourceLink, UUID> {
 
-    Optional<JobSourceLink> findByJob_IdAndSourceName(UUID jobId, String sourceName);
+    Optional<JobSourceLink> findBySourceNameAndSourceJobId(String sourceName, String sourceJobId);
 
     List<JobSourceLink> findByJob_IdOrderByFirstSeenAtAsc(UUID jobId);
 
