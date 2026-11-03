@@ -160,6 +160,9 @@ bamboohr:
     multiplier: 2
     max-delay-ms: 30000
 
+discovery:
+  poll-interval: ${DISCOVERY_POLL_INTERVAL:PT6H}
+
 resilience4j:
   circuitbreaker:
     instances:
