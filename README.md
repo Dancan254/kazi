@@ -203,7 +203,7 @@ curl http://localhost:8080/api/jobs/<job-uuid>
 `GET /api/jobs/{id}` returns the complete job and a `sources` array containing each original source/application URL. A missing job returns a 404 ProblemDetail response.
 
 ## Semantic search
-Semantic retrieval uses local Ollama `nomic-embed-text` embeddings (768 dimensions) and pgvector cosine distance with an HNSW index. Job text is capped at 6,000 characters, and a content hash prevents unchanged jobs from being embedded again. Inactive jobs are excluded. No job content leaves the machine.
+Semantic retrieval uses local Ollama `snowflake-arctic-embed:137m` embeddings (768 dimensions) and pgvector cosine distance with an HNSW index. Job text is capped at 6,000 characters, and a content hash prevents unchanged jobs from being embedded again. Inactive jobs are excluded. No job content leaves the machine.
 
 Start the optional model service and pull the model once:
 

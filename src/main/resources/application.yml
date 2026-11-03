@@ -17,7 +17,7 @@ spring:
       base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
       embedding:
         options:
-          model: ${OLLAMA_EMBEDDING_MODEL:nomic-embed-text:v1.5}
+          model: ${OLLAMA_EMBEDDING_MODEL:snowflake-arctic-embed:137m}
   application:
     name: kazi
   datasource:
@@ -64,7 +64,7 @@ kazi:
     api-key: ${KAZI_API_KEY:}
   semantic:
     enabled: ${SEMANTIC_SEARCH_ENABLED:false}
-    model: ${OLLAMA_EMBEDDING_MODEL:nomic-embed-text:v1.5}
+    model: ${OLLAMA_EMBEDDING_MODEL:snowflake-arctic-embed:137m}
     dimensions: 768
 
 ingestion:
