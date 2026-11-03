@@ -58,6 +58,32 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+  otlp:
+    metrics:
+      export:
+        enabled: ${OTEL_EXPORT_ENABLED:false}
+        url: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318}/v1/metrics
+  opentelemetry:
+    resource-attributes:
+      deployment.environment: ${DEPLOYMENT_ENVIRONMENT:development}
+      service.version: ${APP_VERSION:0.1.0}
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318}/v1/traces
+    logging:
+      export:
+        otlp:
+          endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318}/v1/logs
+  tracing:
+    export:
+      enabled: ${OTEL_EXPORT_ENABLED:false}
+    sampling:
+      probability: ${OTEL_SAMPLING_PROBABILITY:1.0}
+  logging:
+    export:
+      otlp:
+        enabled: ${OTEL_EXPORT_ENABLED:false}
 
 kazi:
   security:
