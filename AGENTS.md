@@ -36,7 +36,7 @@ Add future domain code in feature packages.
 - Java 25, Spring Boot 4.1.2, Maven
 - Spring AI 2.0.2 with streamable HTTP MCP at `/mcp` and local Ollama embeddings
 - PostgreSQL 18 with pgvector and Flyway
-- Apache Kafka with JSON job events
+- Apache Kafka with JSON job event producers and consumers
 - `GET /api/health`
 - `GET /api/jobs` with keyword, location, employment-type, and pagination filters
 - `GET /api/jobs/search/semantic` with meaning-based pgvector retrieval
@@ -57,7 +57,7 @@ Add future domain code in feature packages.
 - Career-page ATS link discovery and routing for all nine public platforms with redirect and private-address safeguards
 - Six-hour scheduling with nine verified default companies in Compose, opt-in direct runs, per-source failure isolation, and persistent `SourceRun` audits
 - Canonical job persistence with deterministic and fuzzy deduplication, merging, and distinct per-posting source provenance
-- Local 768-dimensional job embeddings with content-hash skipping, HNSW cosine retrieval, active-job filtering, REST and MCP access, and optional Ollama Compose service
+- Event-driven local 768-dimensional job embeddings with both Kafka topic consumers, content-hash skipping, HNSW cosine retrieval, active-job filtering, REST and MCP access, and optional Ollama Compose service
 - Full-snapshot reconciliation for Greenhouse, Lever, Ashby, Workday, SmartRecruiters, Workable, Recruitee, Personio, and BambooHR with per-source activity, multi-source protection, failed-fetch safety, and reactivation
 - Docker Compose and GitHub Actions CI
 - Integration tests use real PostgreSQL, Kafka, and an MCP client; mapping and normalization tests are plain JUnit
