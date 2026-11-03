@@ -109,9 +109,25 @@ workday:
     multiplier: 2
     max-delay-ms: 30000
 
+smartrecruiters:
+  base-url: ${SMARTRECRUITERS_BASE_URL:https://api.smartrecruiters.com/v1/companies}
+  page-size: 100
+  poll-interval: ${SMARTRECRUITERS_POLL_INTERVAL:PT6H}
+  retry:
+    max-retries: 2
+    delay-ms: 2000
+    jitter-ms: 500
+    multiplier: 2
+    max-delay-ms: 30000
+
 resilience4j:
   circuitbreaker:
     instances:
+      smartrecruiters:
+        sliding-window-size: 10
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
       adzuna:
         sliding-window-size: 10
         minimum-number-of-calls: 10
