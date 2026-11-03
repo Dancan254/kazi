@@ -69,10 +69,25 @@ adzuna:
     multiplier: 2
     max-delay-ms: 30000
 
+greenhouse:
+  base-url: ${GREENHOUSE_BASE_URL:https://boards-api.greenhouse.io/v1/boards}
+  poll-interval: ${GREENHOUSE_POLL_INTERVAL:PT6H}
+  retry:
+    max-retries: 2
+    delay-ms: 2000
+    jitter-ms: 500
+    multiplier: 2
+    max-delay-ms: 30000
+
 resilience4j:
   circuitbreaker:
     instances:
       adzuna:
+        sliding-window-size: 10
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+      greenhouse:
         sliding-window-size: 10
         minimum-number-of-calls: 10
         failure-rate-threshold: 50

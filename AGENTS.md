@@ -4,7 +4,7 @@
 An AI job aggregator backend that will normalize and deduplicate jobs from public APIs, then expose search through REST and MCP.
 
 ## What it is NOT
-No frontend or user accounts. Other source adapters, fuzzy deduplication, semantic search, Redis, and production deployment are not implemented yet. The MCP endpoint is unauthenticated and intended for local development.
+No frontend or user accounts. Source adapters beyond Adzuna and Greenhouse, fuzzy deduplication, semantic search, Redis, and production deployment are not implemented yet. The MCP endpoint is unauthenticated and intended for local development.
 
 ## Package structure
 `com.kazi.kazi`
@@ -14,6 +14,7 @@ No frontend or user accounts. Other source adapters, fuzzy deduplication, semant
 - `ingestion/normalization/` — normalized job model and normalization rules
 - `ingestion/run/` — persistent source-run audits
 - `ingestion/adzuna/` — Adzuna configuration, declarative `@HttpExchange` client, source adapter, response mapping, and scheduler
+- `ingestion/greenhouse/` — configurable Greenhouse boards, declarative client, response mapping, per-board provenance, and scheduler
 - `job/` — canonical jobs, source provenance, deterministic deduplication, merge rules, and Kafka job events
 - `search/` — shared job-search use case, paginated REST endpoint, and response DTOs
 - `mcp/` — MCP tool adapters over domain use cases
@@ -34,6 +35,7 @@ Add future domain code in feature packages.
 - Job source contract and raw-payload preservation
 - Company, title, location, salary, and employment-type normalization
 - Adzuna pagination and date filtering with timeouts, Spring Framework `@Retryable`, and Resilience4j circuit breaking
+- Greenhouse multi-board ingestion with configured company names, `updated_at` filtering, JSON-safe raw payloads, and `greenhouse:<token>` provenance
 - Opt-in scheduling, per-source failure isolation, and persistent `SourceRun` audits
 - Canonical job persistence with deterministic deduplication, merging, and source provenance
 - Docker Compose and GitHub Actions CI
