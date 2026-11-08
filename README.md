@@ -262,9 +262,6 @@ The app waits for healthy PostgreSQL and Kafka containers and has its own `/actu
 
 The `infra/terraform` directory contains a low-cost, single-EC2 deployment with self-hosted PostgreSQL and Kafka, SSM administration, S3 backups, and an AWS Budget alert. The detailed AWS runbook is maintained locally in `DEPLOYMENT.local.md` and is intentionally excluded from Git.
 
-## Architecture decisions
-- [ADR-0001](docs/adr/0001-package-by-feature-monolith.md) — Package-by-feature monolith over microservices
-
 ## Testing
 The health integration test starts the application on a random port, runs Flyway against real PostgreSQL, and calls the endpoint over HTTP. Normalization and source mapping use small plain-JUnit tests with mocked HTTP responses. Focused tests prove Spring Framework retries and Resilience4j circuit breaking. Ingestion and job integration tests use real PostgreSQL to verify run audits, failure isolation, all source adapters, career-page discovery and routing, deterministic and fuzzy deduplication, merging, source provenance, multi-source deactivation, failed-fetch safety, and reactivation. Kafka integration tests use a real broker to verify both topics, JSON events, keys, source-run correlation, and event-driven embedding of new and merged jobs. Search integration tests exercise filtering, pagination, job details, source links, semantic pgvector ranking, unchanged-content skipping, inactive-job exclusion, and error responses through real HTTP requests to PostgreSQL. MCP tests validate tool arguments in plain JUnit and use a real MCP Java SDK client to list tools, call keyword and semantic search and job details, and verify error results without a live LLM. Security integration tests verify public endpoints and API-key enforcement for MCP and metrics. Telemetry export is disabled in tests; the local LGTM profile provides live three-signal verification.
 
