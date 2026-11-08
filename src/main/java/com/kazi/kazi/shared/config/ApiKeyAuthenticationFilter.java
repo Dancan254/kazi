@@ -63,13 +63,11 @@ class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-        if (!request.getRequestURI().startsWith("/api/admin/api-keys")) {
-            var authentication = apiKeyService.authenticate(candidate);
-            if (authentication.isPresent()) {
-                authenticateUser(authentication.get());
-                filterChain.doFilter(request, response);
-                return;
-            }
+        var authentication = apiKeyService.authenticate(candidate);
+        if (authentication.isPresent()) {
+            authenticateUser(authentication.get());
+            filterChain.doFilter(request, response);
+            return;
         }
         response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
     }
