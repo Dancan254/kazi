@@ -3,6 +3,7 @@ package com.kazi.kazi.ingestion.normalization;
 import java.util.stream.Collectors;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.parser.Parser;
 
 public final class HtmlTextNormalizer {
 
@@ -17,7 +18,7 @@ public final class HtmlTextNormalizer {
         if (value == null || value.isBlank()) {
             return value;
         }
-        Document document = Jsoup.parse(value);
+        Document document = Jsoup.parse(Parser.unescapeEntities(value, true));
         document.select("script, style, noscript").remove();
         document.select("br").forEach(element -> element.after("\n"));
         document.select("li").forEach(element -> element.prepend("- "));

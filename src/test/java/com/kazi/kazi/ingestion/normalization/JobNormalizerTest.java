@@ -34,6 +34,15 @@ class JobNormalizerTest {
     }
 
     @Test
+    void should_remove_entity_encoded_html_description() {
+        var job = normalizer.normalize(rawJobWithDescription(
+            "&lt;p&gt;Build Java &amp;amp; Spring services.&lt;/p&gt;"
+        ));
+
+        assertThat(job.description()).isEqualTo("Build Java & Spring services.");
+    }
+
+    @Test
     void should_parse_location_and_detect_remote_work() {
         var job = normalizer.normalize(rawJob("Developer", "Acme", "Nairobi, Kenya (Remote)", null, null));
 
