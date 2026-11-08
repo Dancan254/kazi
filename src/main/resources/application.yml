@@ -1,4 +1,6 @@
 spring:
+  config:
+    import: optional:configtree:/run/secrets/
   autoconfigure:
     exclude: org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration
   ai:
@@ -88,6 +90,7 @@ management:
 kazi:
   security:
     api-key: ${KAZI_API_KEY:}
+    required: ${KAZI_SECURITY_REQUIRED:false}
   semantic:
     enabled: ${SEMANTIC_SEARCH_ENABLED:false}
     model: ${OLLAMA_EMBEDDING_MODEL:snowflake-arctic-embed:137m}

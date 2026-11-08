@@ -1,0 +1,10 @@
+.git
+.github
+.env
+secrets
+target
+infra/terraform/.terraform
+infra/terraform/*.tfstate*
+infra/terraform/*.tfplan
+infra/terraform/terraform.tfvars
+DEPLOYMENT.local.md

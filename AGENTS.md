@@ -27,6 +27,7 @@ No frontend or user accounts. Source adapters beyond Adzuna, Greenhouse, Lever, 
 - `job/` — canonical jobs, source provenance, requisition-aware exact deduplication, merge rules, and Kafka job events
 - `search/` — shared keyword and semantic search, pgvector embeddings, paginated REST endpoints, and response DTOs
 - `mcp/` — MCP tool adapters over domain use cases
+- `apikey/` — hashed individual API keys, scopes, lifecycle management, and host-local admin endpoints
 - `shared/config/` — cross-cutting configuration
 - `KaziApplication.java` — application entry point
 
@@ -59,7 +60,7 @@ Add future domain code in feature packages.
 - Canonical job persistence with requisition-aware exact deduplication, merging, and distinct per-posting source provenance
 - Event-driven local 768-dimensional job embeddings with both Kafka topic consumers, content-hash skipping, HNSW cosine retrieval, active-job filtering, REST and MCP access, and optional Ollama Compose service
 - Full-snapshot reconciliation for Greenhouse, Lever, Ashby, Workday, SmartRecruiters, Workable, Recruitee, Personio, and BambooHR with per-source activity, multi-source protection, failed-fetch safety, and reactivation
-- Optional API-key authentication for `/mcp/**` and `/actuator/metrics/**`; blank keys allow local development, while production Compose requires a key
+- SHA-256-hashed individual API keys with `jobs:read` and `metrics:read` scopes, 90-day default expiry, revocation, last-used tracking, and admin-only creation/listing/rotation; the private bootstrap key administers keys through host-local endpoints, while blank keys allow local development
 - OpenTelemetry metrics, traces, and logs with an optional Grafana LGTM Compose profile; exporters are disabled by default and in integration tests
 - Development and production Docker Compose configuration and GitHub Actions CI
 - Integration tests use real PostgreSQL, Kafka, and an MCP client; mapping and normalization tests are plain JUnit

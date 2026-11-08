@@ -2,17 +2,33 @@ services:
   app:
     restart: unless-stopped
     environment:
-      DB_PASSWORD: ${DB_PASSWORD:?}
-      KAZI_API_KEY: ${KAZI_API_KEY:?}
+      DB_PASSWORD: !reset null
+      KAZI_API_KEY: !reset null
+      KAZI_SECURITY_REQUIRED: "true"
       DEPLOYMENT_ENVIRONMENT: ${DEPLOYMENT_ENVIRONMENT:-production}
       OTEL_SAMPLING_PROBABILITY: ${OTEL_SAMPLING_PROBABILITY:-0.1}
+    secrets:
+      - source: db_password
+        target: spring.datasource.password
+      - source: kazi_api_key
+        target: kazi.security.api-key
 
   postgres:
     restart: unless-stopped
     environment:
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?}
+      POSTGRES_PASSWORD: !reset null
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
     ports: !reset []
+    secrets:
+      - source: db_password
+        target: postgres_password
 
   kafka:
     restart: unless-stopped
     ports: !reset []
+
+secrets:
+  db_password:
+    file: ./secrets/db_password
+  kazi_api_key:
+    file: ./secrets/kazi_api_key

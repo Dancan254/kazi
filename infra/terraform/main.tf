@@ -122,9 +122,15 @@ resource "aws_iam_role_policy" "app" {
         Resource = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/kazi/${var.environment}/*"
       },
       {
-        Sid      = "EncryptKaziParameters"
+        Sid      = "ReadKaziParameters"
         Effect   = "Allow"
-        Action   = ["kms:Encrypt", "kms:GenerateDataKey"]
+        Action   = ["ssm:GetParameter"]
+        Resource = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/kazi/${var.environment}/*"
+      },
+      {
+        Sid      = "KaziParameterEncryption"
+        Effect   = "Allow"
+        Action   = ["kms:Encrypt", "kms:Decrypt", "kms:GenerateDataKey"]
         Resource = "*"
         Condition = {
           StringEquals = {
@@ -182,6 +188,7 @@ resource "aws_instance" "app" {
     aws_region        = var.aws_region
     backup_bucket     = aws_s3_bucket.backups.id
     environment       = var.environment
+    public_hostname   = "${aws_eip.app.public_ip}.sslip.io"
     repository_branch = var.repository_branch
     repository_url    = var.repository_url
   })

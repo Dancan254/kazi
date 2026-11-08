@@ -25,7 +25,9 @@ class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .dispatcherTypeMatchers(DispatcherType.ASYNC, DispatcherType.ERROR).permitAll()
-                .requestMatchers("/mcp/**", "/actuator/metrics/**").hasRole("MCP_CLIENT")
+                .requestMatchers("/api/admin/api-keys/**").hasRole("ADMIN")
+                .requestMatchers("/actuator/metrics/**").hasAuthority("SCOPE_metrics:read")
+                .requestMatchers("/mcp/**").hasAuthority("SCOPE_jobs:read")
                 .anyRequest().permitAll()
             )
             .addFilterBefore(apiKeyAuthenticationFilter, AuthorizationFilter.class)

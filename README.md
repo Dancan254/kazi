@@ -218,7 +218,21 @@ Then query `GET /api/jobs/search/semantic?q=distributed%20java%20backend&limit=2
 ## MCP
 The server exposes streamable HTTP at `http://localhost:8080/mcp`. Its `search_active_jobs` tool accepts required `query` keywords plus optional `location`, `employmentType`, and `limit` arguments. Results are newest first and limited to 20. `semantic_search_jobs` accepts a required meaning-based `query` and optional `limit` and returns closest matches when semantic search is enabled. `get_job_details` accepts a required `jobId` UUID from the search results and returns full details with original source/application links.
 
-Set `KAZI_API_KEY` to require the `X-API-Key` header on `/mcp/**` and `/actuator/metrics/**`. Health and job-search endpoints remain public. A blank key preserves unauthenticated local development; a strong, non-blank key is required for any shared or production deployment. Configure MCP clients with `X-API-Key: <your-key>` when authentication is enabled.
+MCP clients send `X-API-Key: <your-key>`. Health and public job-search endpoints remain public. Production uses two kinds of credential:
+
+- The `KAZI_API_KEY` bootstrap credential is private to the administrator. It can use MCP and metrics and manage keys through the local-only admin endpoints.
+- Individual keys have an owner, scopes, a 90-day default expiry, revocation state, and last-used timestamp. Only their SHA-256 hashes and non-secret prefixes are stored. Plaintext is returned once at creation or rotation. `jobs:read` permits MCP; `metrics:read` separately permits private metrics.
+
+On the AWS host, manage keys through SSM from `/opt/kazi`:
+
+```bash
+./scripts/api-keys.sh create "Jane" "jane@example.com" 90
+./scripts/api-keys.sh list
+./scripts/api-keys.sh rotate <key-uuid> 90
+./scripts/api-keys.sh revoke <key-uuid>
+```
+
+Rotation revokes the old key and returns a replacement once; update the client with that replacement. The Caddy proxy rejects admin endpoint requests from outside the host. A blank bootstrap key preserves unauthenticated local development, while production Compose requires a file-backed key.
 
 Inspect the available tools and call them with the MCP Inspector:
 ```bash
@@ -249,22 +263,26 @@ OTEL_EXPORT_ENABLED=true docker compose --profile observability up -d --build
 Grafana is available at `http://localhost:3000` with the local-development login `admin` / `admin`. The `kazi` service appears in Prometheus, Tempo, and Loki. Change the Grafana credentials before exposing it beyond localhost. `OTEL_EXPORTER_OTLP_ENDPOINT` overrides the collector URL, `OTEL_SAMPLING_PROBABILITY` controls trace sampling, and `DEPLOYMENT_ENVIRONMENT` and `APP_VERSION` annotate telemetry. If local ports conflict, override `GRAFANA_PORT`, `OTEL_GRPC_PORT`, and `OTEL_HTTP_PORT`; the app continues to use the collector's internal Compose address.
 
 ## Production Compose
-`docker-compose.prod.yml` requires non-empty `DB_PASSWORD` and `KAZI_API_KEY` values, enables restart policies, lowers trace sampling to 0.1, and removes host ports for PostgreSQL and Kafka. Supply secrets through the deployment environment or an uncommitted `.env` file, then run:
+`docker-compose.prod.yml` mounts the database password and bootstrap admin key from uncommitted files under `secrets/`; they are not injected as container environment variables. The directory is excluded from Git and Docker build contexts. Production also refuses to start with a blank bootstrap key, enables restart policies, lowers trace sampling to 0.1, and removes host ports for PostgreSQL and Kafka.
 
 ```bash
+install -d -m 700 secrets
+openssl rand -hex 24 | tr -d '\n' > secrets/db_password
+openssl rand -hex 24 | tr -d '\n' > secrets/kazi_api_key
+chmod 600 secrets/*
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
 ```
 
-The app waits for healthy PostgreSQL and Kafka containers and has its own `/actuator/health` check. Back up the `postgres_data` volume. When reusing a volume, rotate the PostgreSQL role password separately; changing `DB_PASSWORD` only initializes credentials on a fresh volume. Terminate TLS at a trusted reverse proxy before exposing the app or its API key to untrusted networks. For production telemetry, set `OTEL_EXPORT_ENABLED=true` and point `OTEL_EXPORTER_OTLP_ENDPOINT` at an authenticated collector; do not expose the local LGTM admin interface publicly.
+The app waits for healthy PostgreSQL and Kafka containers and has its own `/actuator/health` check. Back up the `postgres_data` volume. When reusing a volume, rotate the PostgreSQL role password separately; changing the secret file only initializes credentials on a fresh volume. The AWS Caddy configuration provides trusted HTTPS and blocks public access to key-management endpoints. For production telemetry, set `OTEL_EXPORT_ENABLED=true` and point `OTEL_EXPORTER_OTLP_ENDPOINT` at an authenticated collector; do not expose the local LGTM admin interface publicly.
 
 ## AWS deployment
 
-The `infra/terraform` directory contains a low-cost, single-EC2 deployment with self-hosted PostgreSQL and Kafka, SSM administration, S3 backups, and an AWS Budget alert. The detailed AWS runbook is maintained locally in `DEPLOYMENT.local.md` and is intentionally excluded from Git.
+The `infra/terraform` directory contains a low-cost, single-EC2 deployment with self-hosted PostgreSQL and Kafka, SSM administration, S3 backups, automatic HTTPS through an `sslip.io` hostname, and an AWS Budget alert. The detailed AWS runbook is maintained locally in `DEPLOYMENT.local.md` and is intentionally excluded from Git.
 
 ## Testing
-The health integration test starts the application on a random port, runs Flyway against real PostgreSQL, and calls the endpoint over HTTP. Normalization and source mapping use small plain-JUnit tests with mocked HTTP responses. Focused tests prove Spring Framework retries and Resilience4j circuit breaking. Ingestion and job integration tests use real PostgreSQL to verify run audits, failure isolation, all source adapters, career-page discovery and routing, requisition-aware exact deduplication, merging, source provenance, multi-source deactivation, failed-fetch safety, and reactivation. Kafka integration tests use a real broker to verify both topics, JSON events, keys, source-run correlation, and event-driven embedding of new and merged jobs. Search integration tests exercise filtering, pagination, job details, source links, semantic pgvector ranking, unchanged-content skipping, inactive-job exclusion, and error responses through real HTTP requests to PostgreSQL. MCP tests validate tool arguments in plain JUnit and use a real MCP Java SDK client to list tools, call keyword and semantic search and job details, and verify error results without a live LLM. Security integration tests verify public endpoints and API-key enforcement for MCP and metrics. Telemetry export is disabled in tests; the local LGTM profile provides live three-signal verification.
+The health integration test starts the application on a random port, runs Flyway against real PostgreSQL, and calls the endpoint over HTTP. Normalization and source mapping use small plain-JUnit tests with mocked HTTP responses. Focused tests prove Spring Framework retries and Resilience4j circuit breaking. Ingestion and job integration tests use real PostgreSQL to verify run audits, failure isolation, all source adapters, career-page discovery and routing, requisition-aware exact deduplication, merging, source provenance, multi-source deactivation, failed-fetch safety, and reactivation. Kafka integration tests use a real broker to verify both topics, JSON events, keys, source-run correlation, and event-driven embedding of new and merged jobs. Search integration tests exercise filtering, pagination, job details, source links, semantic pgvector ranking, unchanged-content skipping, inactive-job exclusion, and error responses through real HTTP requests to PostgreSQL. MCP tests validate tool arguments in plain JUnit and use a real MCP Java SDK client to list tools, call keyword and semantic search and job details, and verify error results without a live LLM. Security integration tests verify public endpoints, hashed key storage, scopes, admin authorization, valid/invalid/expired/revoked keys, and rotation. Telemetry export is disabled in tests; the local LGTM profile provides live three-signal verification.
 
 ## Status
-- Built: application foundation, database migrations, health endpoint, source contract, normalization, Adzuna, multi-board Greenhouse, paginated multi-site Lever, multi-organization Ashby, paginated multi-site Workday, multi-company SmartRecruiters, multi-account Workable, multi-company Recruitee, multi-company Personio, and multi-company BambooHR adapters, career-site discovery and routing, opt-in scheduling, run audits, canonical job persistence, requisition-aware exact deduplication, full-snapshot job reconciliation, Kafka job event publishing, local Ollama embeddings and pgvector semantic search, REST keyword and semantic search and details, source/application links, MCP keyword and semantic search and job-detail tools, MCP/metrics API-key authentication, OpenTelemetry export, development and production Compose configuration, low-cost single-EC2 Terraform configuration, and CI.
+- Built: application foundation, database migrations, health endpoint, source contract, normalization, Adzuna, multi-board Greenhouse, paginated multi-site Lever, multi-organization Ashby, paginated multi-site Workday, multi-company SmartRecruiters, multi-account Workable, multi-company Recruitee, multi-company Personio, and multi-company BambooHR adapters, career-site discovery and routing, opt-in scheduling, run audits, canonical job persistence, requisition-aware exact deduplication, full-snapshot job reconciliation, Kafka job event publishing, local Ollama embeddings and pgvector semantic search, REST keyword and semantic search and details, source/application links, MCP keyword and semantic search and job-detail tools, hashed scoped API keys with admin lifecycle management, OpenTelemetry export, development and production Compose configuration, low-cost single-EC2 Terraform configuration with HTTPS, and CI.
 - Not built: Redis, frontend, user accounts, remote Terraform state, and CI/CD cloud deployment.

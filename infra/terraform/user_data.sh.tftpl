@@ -23,9 +23,12 @@ cd /opt/kazi
 db_password="$(openssl rand -hex 24)"
 api_key="$(openssl rand -hex 24)"
 umask 077
+install -d -m 0700 secrets
+printf '%s' "$db_password" > secrets/db_password
+printf '%s' "$api_key" > secrets/kazi_api_key
 cat > .env <<EOF
-DB_PASSWORD=$db_password
-KAZI_API_KEY=$api_key
+AWS_REGION=${aws_region}
+KAZI_ENVIRONMENT=${environment}
 INGESTION_SCHEDULING_ENABLED=true
 SEMANTIC_SEARCH_ENABLED=false
 OTEL_EXPORT_ENABLED=false
@@ -41,8 +44,10 @@ aws ssm put-parameter --region "${aws_region}" \
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
 cat > /etc/caddy/Caddyfile <<'EOF'
-:80 {
+${public_hostname} {
 	encode zstd gzip
+	@admin path /api/admin/api-keys*
+	respond @admin "Forbidden" 403
 	reverse_proxy 127.0.0.1:8080
 }
 EOF

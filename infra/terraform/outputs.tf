@@ -1,11 +1,11 @@
 output "application_url" {
   description = "Base URL for REST requests"
-  value       = "http://${aws_eip.app.public_ip}"
+  value       = "https://${aws_eip.app.public_ip}.sslip.io"
 }
 
 output "mcp_url" {
   description = "Streamable HTTP MCP endpoint"
-  value       = "http://${aws_eip.app.public_ip}/mcp"
+  value       = "https://${aws_eip.app.public_ip}.sslip.io/mcp"
 }
 
 output "instance_id" {
@@ -19,6 +19,6 @@ output "backup_bucket_name" {
 }
 
 output "mcp_api_key_parameter" {
-  description = "SecureString parameter containing the generated MCP API key"
+  description = "SecureString parameter containing the generated bootstrap admin API key"
   value       = "/kazi/${var.environment}/mcp-api-key"
 }
