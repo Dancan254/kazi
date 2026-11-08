@@ -1,0 +1,57 @@
+#!/bin/bash
+set -euo pipefail
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update
+apt-get install -y ca-certificates curl git awscli openssl caddy
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+chmod a+r /etc/apt/keyrings/docker.asc
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list
+apt-get update
+apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+systemctl enable --now docker
+
+git clone --branch "${repository_branch}" --depth 1 "${repository_url}" /opt/kazi
+cd /opt/kazi
+
+db_password="$(openssl rand -hex 24)"
+api_key="$(openssl rand -hex 24)"
+umask 077
+cat > .env <<EOF
+DB_PASSWORD=$db_password
+KAZI_API_KEY=$api_key
+INGESTION_SCHEDULING_ENABLED=true
+SEMANTIC_SEARCH_ENABLED=false
+OTEL_EXPORT_ENABLED=false
+EOF
+
+aws ssm put-parameter --region "${aws_region}" \
+  --name "/kazi/${environment}/db-password" \
+  --type SecureString --value "$db_password" --overwrite
+aws ssm put-parameter --region "${aws_region}" \
+  --name "/kazi/${environment}/mcp-api-key" \
+  --type SecureString --value "$api_key" --overwrite
+
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+cat > /etc/caddy/Caddyfile <<'EOF'
+:80 {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:8080
+}
+EOF
+systemctl enable --now caddy
+systemctl restart caddy
+
+cat > /etc/cron.daily/kazi-backup <<'EOF'
+#!/bin/bash
+set -euo pipefail
+cd /opt/kazi
+backup="kazi-$(date +%Y%m%d-%H%M%S).sql.gz"
+tmp="$(mktemp)"
+trap 'rm -f "$tmp"' EXIT
+docker compose exec -T postgres pg_dump -U kazi -d kazi | gzip > "$tmp"
+aws s3 cp "$tmp" "s3://${backup_bucket}/postgres/$backup" --region "${aws_region}"
+EOF
+chmod 0755 /etc/cron.daily/kazi-backup

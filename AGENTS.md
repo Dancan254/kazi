@@ -4,7 +4,7 @@
 An AI job aggregator backend that will normalize and deduplicate jobs from public APIs, then expose search through REST and MCP.
 
 ## What it is NOT
-No frontend or user accounts. Source adapters beyond Adzuna, Greenhouse, Lever, Ashby, Workday, SmartRecruiters, Workable, Recruitee, Personio, and BambooHR and Redis are not implemented. Production Compose configuration is provided, but no external cloud deployment is configured.
+No frontend or user accounts. Source adapters beyond Adzuna, Greenhouse, Lever, Ashby, Workday, SmartRecruiters, Workable, Recruitee, Personio, and BambooHR and Redis are not implemented. Production Compose and low-cost single-EC2 Terraform configuration are provided, but remote Terraform state and CI/CD cloud deployment are not configured. The detailed AWS runbook in `DEPLOYMENT.local.md` is intentionally local-only and must not be committed.
 
 ## Package structure
 `com.kazi.kazi`

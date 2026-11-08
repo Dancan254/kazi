@@ -32,3 +32,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Local deployment and Terraform ###
+/DEPLOYMENT.local.md
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfplan
+terraform.tfvars
+*.auto.tfvars
