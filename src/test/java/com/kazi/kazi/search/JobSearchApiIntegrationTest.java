@@ -103,6 +103,17 @@ class JobSearchApiIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
+    void should_return_plain_text_description() {
+        saveJob("1", "Java Developer", "Acme", "Remote", "Full Time", "<p>Spring <strong>Boot</strong> &amp; Kafka</p>");
+
+        client.get().uri("/api/jobs")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$.content[0].description").isEqualTo("Spring Boot & Kafka");
+    }
+
+    @Test
     void should_return_problem_detail_when_job_does_not_exist() {
         var jobId = java.util.UUID.randomUUID();
 

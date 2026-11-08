@@ -4,6 +4,7 @@ import com.kazi.kazi.ingestion.source.RawJob;
 
 public record NormalizedJob(
     RawJob rawJob,
+    String description,
     String title,
     String company,
     String city,

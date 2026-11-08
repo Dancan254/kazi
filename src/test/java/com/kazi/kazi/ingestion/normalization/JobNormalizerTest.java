@@ -21,6 +21,19 @@ class JobNormalizerTest {
     }
 
     @Test
+    void should_convert_html_description_to_plain_text() {
+        var job = normalizer.normalize(rawJobWithDescription(
+            "<div><h3>The Role</h3><p>Build Java &amp; Spring services.<br>Remote &amp; flexible.</p>"
+                + "<ul><li>Java</li><li>Kafka</li></ul><script>ignored()</script></div>"
+        ));
+
+        assertThat(job.description()).isEqualTo(
+            "The Role\nBuild Java & Spring services.\nRemote & flexible.\n- Java\n- Kafka"
+        );
+        assertThat(job.rawJob().description()).contains("<h3>");
+    }
+
+    @Test
     void should_parse_location_and_detect_remote_work() {
         var job = normalizer.normalize(rawJob("Developer", "Acme", "Nairobi, Kenya (Remote)", null, null));
 
@@ -60,6 +73,21 @@ class JobNormalizerTest {
     }
 
     private RawJob rawJob(String title, String company, String location, String salary, String employmentType) {
+        return rawJob(title, company, location, salary, employmentType, "Description");
+    }
+
+    private RawJob rawJobWithDescription(String description) {
+        return rawJob("Developer", "Acme", "Remote", null, null, description);
+    }
+
+    private RawJob rawJob(
+        String title,
+        String company,
+        String location,
+        String salary,
+        String employmentType,
+        String description
+    ) {
         return new RawJob(
             "test",
             "job-1",
@@ -69,7 +97,7 @@ class JobNormalizerTest {
             location,
             salary,
             employmentType,
-            "Description",
+            description,
             Instant.parse("2026-11-01T00:00:00Z"),
             Map.of("id", "job-1")
         );

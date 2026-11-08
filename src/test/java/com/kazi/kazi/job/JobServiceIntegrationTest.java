@@ -26,10 +26,29 @@ class JobServiceIntegrationTest extends BaseIntegrationTest {
 
     private final JobNormalizer normalizer = new JobNormalizer();
 
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
     @BeforeEach
     void cleanJobs() {
         sourceLinkRepository.deleteAll();
         jobRepository.deleteAll();
+    }
+
+    @Test
+    void should_clean_legacy_html_description_when_job_is_merged() {
+        jobService.save(normalizedJob("adzuna", "Plain description", null));
+        Job job = jobRepository.findAll().getFirst();
+        jdbcTemplate.update(
+            "UPDATE job SET description = ? WHERE id = ?",
+            "<p>Legacy <strong>HTML</strong> description</p>",
+            job.getId()
+        );
+
+        jobService.save(normalizedJob("adzuna", "Plain description", null));
+
+        assertThat(jobRepository.findById(job.getId()).orElseThrow().getDescription())
+            .isEqualTo("Legacy HTML description");
     }
 
     @Test

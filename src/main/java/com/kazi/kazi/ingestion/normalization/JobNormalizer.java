@@ -23,6 +23,7 @@ public class JobNormalizer {
 
         return new NormalizedJob(
             rawJob,
+            HtmlTextNormalizer.toPlainText(rawJob.description()),
             normalizeTitle(rawJob.title()),
             clean(rawJob.company()),
             location.city(),

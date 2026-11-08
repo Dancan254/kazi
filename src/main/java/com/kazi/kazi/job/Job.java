@@ -1,5 +1,6 @@
 package com.kazi.kazi.job;
 
+import com.kazi.kazi.ingestion.normalization.HtmlTextNormalizer;
 import com.kazi.kazi.ingestion.normalization.NormalizedJob;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -69,7 +70,7 @@ public class Job {
         this.salaryMin = job.salaryMin();
         this.salaryMax = job.salaryMax();
         this.currency = job.currency();
-        this.description = job.rawJob().description();
+        this.description = job.description();
         this.employmentType = job.employmentType();
         this.status = "active";
         this.createdAt = now;
@@ -77,7 +78,8 @@ public class Job {
     }
 
     void merge(NormalizedJob job, String location, Instant now) {
-        String candidateDescription = job.rawJob().description();
+        description = HtmlTextNormalizer.toPlainText(description);
+        String candidateDescription = job.description();
         if (length(candidateDescription) > length(description)) {
             description = candidateDescription;
         }
