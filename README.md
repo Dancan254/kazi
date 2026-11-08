@@ -269,7 +269,7 @@ Grafana is available at `http://localhost:3000` with the local-development login
 install -d -m 700 secrets
 openssl rand -hex 24 | tr -d '\n' > secrets/db_password
 openssl rand -hex 24 | tr -d '\n' > secrets/kazi_api_key
-chmod 600 secrets/*
+chmod 644 secrets/*
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
 ```

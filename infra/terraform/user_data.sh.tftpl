@@ -26,6 +26,7 @@ umask 077
 install -d -m 0700 secrets
 printf '%s' "$db_password" > secrets/db_password
 printf '%s' "$api_key" > secrets/kazi_api_key
+chmod 0644 secrets/db_password secrets/kazi_api_key
 cat > .env <<EOF
 AWS_REGION=${aws_region}
 KAZI_ENVIRONMENT=${environment}
