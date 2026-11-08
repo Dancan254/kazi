@@ -38,16 +38,20 @@ public class JobService {
         String deterministicKey = deterministicKey(normalizedJob);
         String location = location(normalizedJob);
         Instant now = clock.instant();
-        var existingJob = jobRepository.findByDeterministicKey(deterministicKey)
-            .or(() -> fuzzyMatch(normalizedJob, location));
+        var existingJob = jobRepository.findByDeterministicKey(deterministicKey);
+        if (existingJob.filter(job -> requiresSeparateJob(job, normalizedJob.rawJob())).isPresent()) {
+            deterministicKey = postingDeterministicKey(deterministicKey, normalizedJob.rawJob());
+            existingJob = jobRepository.findByDeterministicKey(deterministicKey);
+        }
         boolean inserted = existingJob.isEmpty();
+        String jobKey = deterministicKey;
 
         Job job = existingJob
             .map(existing -> {
                 existing.merge(normalizedJob, location, now);
                 return existing;
             })
-            .orElseGet(() -> new Job(normalizedJob, deterministicKey, location, now));
+            .orElseGet(() -> new Job(normalizedJob, jobKey, location, now));
         job = jobRepository.save(job);
 
         RawJob rawJob = normalizedJob.rawJob();
@@ -91,10 +95,20 @@ public class JobService {
         }
     }
 
-    private java.util.Optional<Job> fuzzyMatch(NormalizedJob candidate, String location) {
-        return jobRepository.findTop50ByCompanyOrderByUpdatedAtDesc(candidate.company()).stream()
-            .filter(existing -> JobSimilarity.isDuplicate(candidate, existing, location))
-            .findFirst();
+    private boolean requiresSeparateJob(Job job, RawJob candidate) {
+        List<JobSourceLink> sources = sourceLinkRepository.findByJob_IdOrderByFirstSeenAtAsc(job.getId());
+        boolean samePosting = sources.stream().anyMatch(source ->
+            source.getSourceName().equals(candidate.sourceName())
+                && Objects.equals(source.getSourceJobId(), candidate.sourceJobId())
+        );
+        if (samePosting) {
+            return false;
+        }
+        return sources.stream().anyMatch(source -> source.getSourceName().equals(candidate.sourceName()));
+    }
+
+    private String postingDeterministicKey(String deterministicKey, RawJob job) {
+        return hash(deterministicKey + "|" + job.sourceName() + "|" + job.sourceJobId());
     }
 
     private String deterministicKey(NormalizedJob job) {
@@ -107,7 +121,10 @@ public class JobService {
             .map(value -> value == null ? "" : value)
             .reduce((left, right) -> left + "|" + right)
             .orElse("");
-        String value = job.company() + "|" + job.title() + "|" + locationKey;
+        return hash(job.company() + "|" + job.title() + "|" + locationKey);
+    }
+
+    private String hash(String value) {
         try {
             byte[] hash = MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(hash);

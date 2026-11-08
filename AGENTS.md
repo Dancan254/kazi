@@ -24,7 +24,7 @@ No frontend or user accounts. Source adapters beyond Adzuna, Greenhouse, Lever, 
 - `ingestion/personio/` — configurable Personio companies, secure XML parsing, response mapping, per-company provenance, and scheduler
 - `ingestion/bamboohr/` — configurable BambooHR companies, declarative list/detail client, response mapping, per-company provenance, and scheduler
 - `ingestion/discovery/` — public career-page link discovery, ATS URL routing, private-address protection, and scheduled ingestion
-- `job/` — canonical jobs, source provenance, deterministic and fuzzy deduplication, merge rules, and Kafka job events
+- `job/` — canonical jobs, source provenance, requisition-aware exact deduplication, merge rules, and Kafka job events
 - `search/` — shared keyword and semantic search, pgvector embeddings, paginated REST endpoints, and response DTOs
 - `mcp/` — MCP tool adapters over domain use cases
 - `shared/config/` — cross-cutting configuration
@@ -56,7 +56,7 @@ Add future domain code in feature packages.
 - BambooHR multi-company ingestion with public detail mapping, compensation, remote locations, original job links, and `bamboohr:<site>` provenance
 - Career-page ATS link discovery and routing for all nine public platforms with redirect and private-address safeguards
 - Six-hour scheduling with nine verified default companies in Compose, opt-in direct runs, per-source failure isolation, and persistent `SourceRun` audits
-- Canonical job persistence with deterministic and fuzzy deduplication, merging, and distinct per-posting source provenance
+- Canonical job persistence with requisition-aware exact deduplication, merging, and distinct per-posting source provenance
 - Event-driven local 768-dimensional job embeddings with both Kafka topic consumers, content-hash skipping, HNSW cosine retrieval, active-job filtering, REST and MCP access, and optional Ollama Compose service
 - Full-snapshot reconciliation for Greenhouse, Lever, Ashby, Workday, SmartRecruiters, Workable, Recruitee, Personio, and BambooHR with per-source activity, multi-source protection, failed-fetch safety, and reactivation
 - Optional API-key authentication for `/mcp/**` and `/actuator/metrics/**`; blank keys allow local development, while production Compose requires a key

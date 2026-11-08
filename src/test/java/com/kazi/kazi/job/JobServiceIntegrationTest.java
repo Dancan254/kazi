@@ -95,11 +95,11 @@ class JobServiceIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    void should_keep_distinct_source_postings_when_they_merge_into_one_job() {
+    void should_keep_distinct_requisitions_from_same_source_separate() {
         jobService.save(normalizedJob("workday", "Description", null, "posting-1"));
         jobService.save(normalizedJob("workday", "Description", null, "posting-2"));
 
-        assertThat(jobRepository.findAll()).hasSize(1);
+        assertThat(jobRepository.findAll()).hasSize(2);
         assertThat(sourceLinkRepository.findAll())
             .extracting(JobSourceLink::getSourceJobId)
             .containsExactlyInAnyOrder("posting-1", "posting-2");
@@ -140,7 +140,7 @@ class JobServiceIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    void should_fuzzy_merge_minor_title_variation() {
+    void should_not_merge_similar_titles() {
         jobService.save(normalizedJobWithTitle("adzuna", "posting-1", "Sr. SWE (Backend)", "Nairobi, Kenya"));
 
         var savedJob = jobService.save(normalizedJobWithTitle(
@@ -150,13 +150,13 @@ class JobServiceIntegrationTest extends BaseIntegrationTest {
             "Nairobi, Kenya"
         ));
 
-        assertThat(savedJob.inserted()).isFalse();
-        assertThat(jobRepository.findAll()).hasSize(1);
+        assertThat(savedJob.inserted()).isTrue();
+        assertThat(jobRepository.findAll()).hasSize(2);
         assertThat(sourceLinkRepository.findAll()).hasSize(2);
     }
 
     @Test
-    void should_not_fuzzy_merge_jobs_in_different_locations() {
+    void should_not_merge_jobs_in_different_locations() {
         jobService.save(normalizedJobWithTitle("adzuna", "posting-1", "Sr. SWE (Backend)", "Nairobi, Kenya"));
 
         var savedJob = jobService.save(normalizedJobWithTitle(
